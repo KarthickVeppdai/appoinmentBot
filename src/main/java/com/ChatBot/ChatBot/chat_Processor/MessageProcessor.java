@@ -16,6 +16,6 @@ public class MessageProcessor
     public void processTextMessage(ProcessMessageEvent event)
     {
         ProcessMessage processMessage = (ProcessMessage) event.getSource();
-        System.out.println("Inside Process Text Msg"+processMessage.getFrom()+"---"+processMessage.getTimestamp());
+        System.out.println("Inside Process Text hi Msg"+processMessage.getFrom()+"---"+processMessage.getTimestamp());
     }
 }
