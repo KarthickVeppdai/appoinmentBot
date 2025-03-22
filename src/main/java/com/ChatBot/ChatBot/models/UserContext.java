@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.*;
+import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serializable;
+import java.util.List;
 
 
 @Builder
@@ -17,10 +19,12 @@ import java.io.Serializable;
 @Setter
 public class UserContext implements Serializable {
 
-    @JsonProperty("_id")
-    private String id;
-    @JsonProperty("_rev")
-    private String rev;
-    @JsonProperty("age")
-    private String age;
+    private String current_intent;
+    private Boolean current_intent_status;
+    private List<String> slots ;
+    private List<Integer> slots_status;
+    private Boolean slots_fullfilled ;
+    private Integer current_slot_id;
+    private ProcessMessage processMessage;
+
 }

@@ -12,14 +12,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-public class MessageDispatcher {
+public class WhatsAppMessageParser {
 
     @Autowired
     TImeStampConverter tImeStampConverter;

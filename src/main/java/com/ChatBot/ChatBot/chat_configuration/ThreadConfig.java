@@ -1,4 +1,4 @@
-package com.ChatBot.ChatBot.config;
+package com.ChatBot.ChatBot.chat_configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
