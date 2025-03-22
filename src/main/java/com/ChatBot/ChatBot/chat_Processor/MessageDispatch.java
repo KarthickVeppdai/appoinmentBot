@@ -50,6 +50,7 @@ catch (Exception e)
 finally {
     System.out.println("Inside finally");
     userContext = null;
+
     processMessage=null;
 }
 
