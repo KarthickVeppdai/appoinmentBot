@@ -1,9 +1,9 @@
-package com.ChatBot.ChatBot.chat_service;
+package com.ChatBot.ChatBot.chat_service.ai_service;
 
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 
-public interface CancelIntent {
+public interface CancelIntentAIService {
 
     @SystemMessage("You are a Symmentic analysier")
     String cancelIntent(String userMessage);

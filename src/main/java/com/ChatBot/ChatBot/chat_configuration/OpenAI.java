@@ -1,10 +1,9 @@
 package com.ChatBot.ChatBot.chat_configuration;
 
-import com.ChatBot.ChatBot.chat_service.CancelIntent;
+import com.ChatBot.ChatBot.chat_service.ai_service.CancelIntentAIService;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 
 import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.spring.AiService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,9 +22,9 @@ public class OpenAI {
                 .build();
     }
     @Bean
-    public CancelIntent getCancelIntent()
+    public CancelIntentAIService getCancelIntent()
     {
-        return AiServices.create(CancelIntent.class,getModel());
+        return AiServices.create(CancelIntentAIService.class,getModel());
 
     }
 

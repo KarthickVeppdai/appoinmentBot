@@ -2,7 +2,8 @@ package com.ChatBot.ChatBot.chat_Processor;
 
 import com.ChatBot.ChatBot.chat_configuration.OllamaAI;
 import com.ChatBot.ChatBot.chat_configuration.OpenAI;
-import com.ChatBot.ChatBot.chat_service.CancelIntent;
+import com.ChatBot.ChatBot.chat_service.mangers.IntentHandler;
+import com.ChatBot.ChatBot.chat_service.mangers.IntentRegistry;
 import com.ChatBot.ChatBot.database.RedisService;
 import com.ChatBot.ChatBot.models.ProcessMessage;
 import com.ChatBot.ChatBot.models.ProcessMessageEvent;
@@ -11,11 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Optional;
 
 @Component
-public class MessageDispatch
-{
+public class MessageDispatch {
 
     @Autowired
     public RedisService redisService;
@@ -26,33 +26,43 @@ public class MessageDispatch
     @Autowired
     public OllamaAI ollamaAI;
 
+    @Autowired
+    public IntentRegistry intentRegistry;
 
+    private Optional<UserContext> userContext;
 
-    private UserContext userContext;
-
+    private IntentHandler intentHandler;
 
     @EventListener(condition = "#event.type.equals('text')")
-    public void processTextMessage(ProcessMessageEvent event)
-    {
+    public void processTextMessage(ProcessMessageEvent event) {
 
-        // check for cancel intent
-        // get context and check timt to live etc..
-        // pass to intent for further processing
-        ProcessMessage processMessage = (ProcessMessage) event.getSource();
-try {
-    userContext = redisService.getData(processMessage.getFrom());
-    System.out.println(openAI.getCancelIntent().isPositive(processMessage.getBody()));
-}
-catch (Exception e)
-{
+        try {
+            ProcessMessage processMessage = (ProcessMessage) event.getSource();
+            if (openAI.getCancelIntent().isPositive(processMessage.getBody())) {// go to cancel intent
+                intentHandler = intentRegistry.assignIntent("cancel_intent");
+            } else {
+                userContext = Optional.ofNullable(redisService.getData(processMessage.getFrom()));
+                if (userContext.isPresent()) {
+                    if (userContext.get().getCurrent_intent_status() == true) {
+                        //Completed Pass to welcome Intent and in welocme intent process as old
+                        intentRegistry.assignIntent("welcome_intent").IntentProcessor(userContext);
+                    } else {
+                        intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext);
+                    }
+                } else {//No context Available
+                    intentRegistry.assignIntent("welcome_intent").IntentProcessor(userContext);
+                }
+            }
 
-}
-finally {
-    System.out.println("Inside finally");
-    userContext = null;
 
-    processMessage=null;
-}
+        } catch (Exception e) {
+
+        } finally {
+            System.out.println("Inside finally");
+            userContext = null;
+            intentHandler = null;
+
+        }
 
     }
 }
