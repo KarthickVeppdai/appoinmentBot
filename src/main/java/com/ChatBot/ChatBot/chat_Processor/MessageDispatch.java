@@ -26,8 +26,12 @@ public class MessageDispatch {
     @Autowired
     public OllamaAI ollamaAI;
 
-    @Autowired
+
     public IntentRegistry intentRegistry;
+    @Autowired
+    public MessageDispatch(IntentRegistry intentRegistry) {
+        this.intentRegistry = intentRegistry;
+    }
 
     private Optional<UserContext> userContext;
 
@@ -38,31 +42,33 @@ public class MessageDispatch {
 
         try {
             ProcessMessage processMessage = (ProcessMessage) event.getSource();
-            if (openAI.getCancelIntent().isPositive(processMessage.getBody())) {// go to cancel intent
+
+
+
+
+            if (false) {// go to cancel intent
                 intentHandler = intentRegistry.assignIntent("cancel_intent");
             } else {
                 userContext = Optional.ofNullable(redisService.getData(processMessage.getFrom()));
                 if (userContext.isPresent()) {
                     if (userContext.get().getCurrent_intent_status() == true) {
                         //Completed Pass to welcome Intent and in welocme intent process as old
-                        intentRegistry.assignIntent("welcome_intent").IntentProcessor(userContext);
+                        intentRegistry.assignIntent("WELCOME").IntentProcessor(userContext,processMessage);
                     } else {
-                        intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext);
+                        intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext,processMessage);
                     }
                 } else {//No context Available
-                    intentRegistry.assignIntent("welcome_intent").IntentProcessor(userContext);
+                    IntentHandler intentHandler1 = intentRegistry.assignIntent("WELCOME");
+                    intentHandler1.IntentProcessor(userContext,processMessage);
                 }
             }
-
-
         } catch (Exception e) {
+            System.out.println(e);
 
         } finally {
             System.out.println("Inside finally");
             userContext = null;
             intentHandler = null;
-
         }
-
     }
 }

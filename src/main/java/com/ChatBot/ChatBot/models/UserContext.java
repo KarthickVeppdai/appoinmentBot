@@ -27,4 +27,7 @@ public class UserContext implements Serializable {
     private Integer current_slot_id;
     private ProcessMessage processMessage;
 
+
+
+
 }
