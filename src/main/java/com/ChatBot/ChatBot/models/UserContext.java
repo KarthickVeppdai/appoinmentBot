@@ -20,12 +20,14 @@ import java.util.List;
 public class UserContext implements Serializable {
 
     private String current_intent;
-    private Boolean current_intent_status;
+    private Integer current_intent_status;
     private List<String> slots ;
     private List<Integer> slots_status;
     private Boolean slots_fullfilled ;
     private Integer current_slot_id;
     private ProcessMessage processMessage;
+
+    // current_intent, current_intent_status, slots , slots_status,slots_fullfilled, current_slot_id,processMessage
 
 
 

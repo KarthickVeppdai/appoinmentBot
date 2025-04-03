@@ -1,9 +1,12 @@
 package com.ChatBot.ChatBot.chat_service.intents;
 
+import com.ChatBot.ChatBot.chat_configuration.OpenAI;
+import com.ChatBot.ChatBot.chat_service.ai_service.WelcomeIntentAIService;
 import com.ChatBot.ChatBot.chat_service.mangers.IntentHandler;
 import com.ChatBot.ChatBot.database.RedisService;
 import com.ChatBot.ChatBot.models.ProcessMessage;
 import com.ChatBot.ChatBot.models.UserContext;
+import dev.langchain4j.model.output.structured.Description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
@@ -20,22 +23,76 @@ public class WelcomeIntent implements IntentHandler {
 
     private UserContext saveContext;
 
+    @Autowired
+    public OpenAI openAI;
+
+    enum MainIntents {
+
+
+        APPOINMENT,
+
+
+        REPORT,
+
+
+        WELCOME,
+    }
+
     @Override
     public Void IntentProcessor(Optional<UserContext> userContext , ProcessMessage processMessage) {
 
-        saveContext = new UserContext();
-        System.out.println("Inside Welcome Intenet");
-        saveContext.setCurrent_intent("WELCOME");
-        saveContext.setCurrent_intent_status(false);
-      //  saveContext.setSlots(List.of());
-       // saveContext.setSlots_status(List.of());
-        saveContext.setCurrent_slot_id(0);
-        saveContext.setSlots_fullfilled(false);
-        saveContext.setProcessMessage(processMessage);
 
-        redisService.saveData(processMessage.getFrom(),saveContext);
-        //send msg to Medium
-        System.out.println("Inside Welcome Intenet++++Contrext Saved");
+        userContext.filter(userContext1 -> userContext1.getCurrent_intent_status()==0)
+                .ifPresentOrElse(
+                        userContext1 -> {
+                    if(openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody()).equals(WelcomeIntentAIService.MainIntents.APPOINMENT))
+                    {
+
+                        saveContext = new UserContext("WELCOME",0,
+                                List.of("1"),List.of(1),false,0,processMessage);
+                        System.out.println("Inside Welcome Intenet");
+
+                        redisService.saveData(processMessage.getFrom(),saveContext);
+                        //send msg to Medium
+                        System.out.println("Inside Welcome Intenet++++Contrext Saved");
+
+                    }
+                            if(openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody()).equals(WelcomeIntentAIService.MainIntents.REPORT))
+                            {
+
+                                saveContext = new UserContext("WELCOME",0,
+                                        List.of("1"),List.of(1),false,0,processMessage);
+                                System.out.println("Inside Welcome Intenet");
+
+                                redisService.saveData(processMessage.getFrom(),saveContext);
+                                //send msg to Medium
+                                System.out.println("Inside Welcome Intenet++++Contrext Saved");
+
+                            }
+
+                            if(openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody()).equals(WelcomeIntentAIService.MainIntents.WELCOME))
+                            {
+
+                                saveContext = new UserContext("WELCOME",0,
+                                        List.of("1"),List.of(1),false,0,processMessage);
+                                System.out.println("Inside Welcome Intenet");
+
+                                redisService.saveData(processMessage.getFrom(),saveContext);
+                                //send msg to Medium
+                                System.out.println("Inside Welcome Intenet++++Contrext Saved");
+
+                            }
+
+
+
+                },
+        ()->{
+             //Say welcome Message with Confimartion and past chat details.
+             // You booked Docotr with hope select other options.
+
+
+        }
+                                    );
         return null;
     }
 }

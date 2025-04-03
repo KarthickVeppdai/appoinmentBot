@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Component
@@ -50,17 +51,22 @@ public class MessageDispatch {
                 intentHandler = intentRegistry.assignIntent("cancel_intent");
             } else {
                 userContext = Optional.ofNullable(redisService.getData(processMessage.getFrom()));
-                if (userContext.isPresent()) {
-                    if (userContext.get().getCurrent_intent_status() == true) {
-                        //Completed Pass to welcome Intent and in welocme intent process as old
-                        intentRegistry.assignIntent("WELCOME").IntentProcessor(userContext,processMessage);
-                    } else {
-                        intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext,processMessage);
-                    }
-                } else {//No context Available
-                    IntentHandler intentHandler1 = intentRegistry.assignIntent("WELCOME");
-                    intentHandler1.IntentProcessor(userContext,processMessage);
-                }
+
+                userContext.filter(Objects::nonNull)
+                        .ifPresentOrElse(
+                                userContext1 -> {
+                                    if (userContext1.getCurrent_intent_status() == 1) {
+                                        //Completed Pass to welcome Intent and in welocme intent process as old
+                                        intentRegistry.assignIntent("WELCOME").IntentProcessor(userContext,processMessage);
+                                    } else {
+                                        intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext,processMessage);
+                                    }
+                                },
+                                ()->{
+                                    IntentHandler intentHandler1 = intentRegistry.assignIntent("WELCOME");
+                                    intentHandler1.IntentProcessor(userContext,processMessage);
+                                }
+                        );
             }
         } catch (Exception e) {
             System.out.println(e);
