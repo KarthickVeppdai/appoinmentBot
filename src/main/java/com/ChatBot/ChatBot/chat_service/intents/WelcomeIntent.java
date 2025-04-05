@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+import static com.ChatBot.ChatBot.chat_service.intents.WelcomeIntent.MainIntents.APPOINMENT;
+import static com.ChatBot.ChatBot.chat_service.intents.WelcomeIntent.MainIntents.REPORT;
+
 @Service("WELCOME")
 public class WelcomeIntent implements IntentHandler {
 
@@ -39,60 +42,58 @@ public class WelcomeIntent implements IntentHandler {
     }
 
     @Override
-    public Void IntentProcessor(Optional<UserContext> userContext , ProcessMessage processMessage) {
+    public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
 
 
-        userContext.filter(userContext1 -> userContext1.getCurrent_intent_status()==0)
+        userContext.filter(userContext1 -> userContext1.getCurrent_intent_status() == 0)
                 .ifPresentOrElse(
                         userContext1 -> {
-                    if(openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody()).equals(WelcomeIntentAIService.MainIntents.APPOINMENT))
-                    {
+                            switch (openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody())) {
+                                case APPOINMENT:
+                                    saveContext = new UserContext("APPOINMENT", 0,
+                                            List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
+                                    System.out.println("Going to Appoinment");
 
-                        saveContext = new UserContext("WELCOME",0,
-                                List.of("1"),List.of(1),false,0,processMessage);
-                        System.out.println("Inside Welcome Intenet");
+                                    redisService.saveData(processMessage.getFrom(), saveContext);
+                                    //Information, help and ask for appointmnt to channel
 
-                        redisService.saveData(processMessage.getFrom(),saveContext);
-                        //send msg to Medium
-                        System.out.println("Inside Welcome Intenet++++Contrext Saved");
+                                    break;
 
-                    }
-                            if(openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody()).equals(WelcomeIntentAIService.MainIntents.REPORT))
-                            {
+                                case REPORT:
+                                    saveContext = new UserContext("REPORT", 0,
+                                            List.of("ID"), List.of(0), false, 0, processMessage);
+                                    System.out.println("Going to Report");
 
-                                saveContext = new UserContext("WELCOME",0,
-                                        List.of("1"),List.of(1),false,0,processMessage);
-                                System.out.println("Inside Welcome Intenet");
+                                    redisService.saveData(processMessage.getFrom(), saveContext);
+                                    //send msg to Medium
 
-                                redisService.saveData(processMessage.getFrom(),saveContext);
-                                //send msg to Medium
-                                System.out.println("Inside Welcome Intenet++++Contrext Saved");
+                                    break;
 
+
+                                default:
+                                    saveContext = new UserContext("WELCOME", 0,
+                                            List.of(""), List.of(0), false, 0, processMessage);
+                                    System.out.println("Going to Welcome");
+                                    redisService.saveData(processMessage.getFrom(), saveContext);
+                                    //send msg to Medium
+
+                                    break;
                             }
 
-                            if(openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody()).equals(WelcomeIntentAIService.MainIntents.WELCOME))
-                            {
+                        },
+                        () -> {
 
-                                saveContext = new UserContext("WELCOME",0,
-                                        List.of("1"),List.of(1),false,0,processMessage);
-                                System.out.println("Inside Welcome Intenet");
+                            saveContext = new UserContext("WELCOME", 0,
+                                    List.of(""), List.of(0), false, 0, processMessage);
+                            System.out.println("Going to Welcome");
 
-                                redisService.saveData(processMessage.getFrom(),saveContext);
-                                //send msg to Medium
-                                System.out.println("Inside Welcome Intenet++++Contrext Saved");
+                            redisService.saveData(processMessage.getFrom(), saveContext);
+                            //send msg like "you alreday completed any other help??"
 
-                            }
-
-
-
-                },
-        ()->{
-             //Say welcome Message with Confimartion and past chat details.
-             // You booked Docotr with hope select other options.
-
-
-        }
-                                    );
+                            //Say welcome Message with Confimartion and past chat details.
+                            // You booked Docotr with hope select other options.
+                        }
+                );
         return null;
     }
 }

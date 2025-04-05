@@ -29,6 +29,7 @@ public class MessageDispatch {
 
 
     public IntentRegistry intentRegistry;
+
     @Autowired
     public MessageDispatch(IntentRegistry intentRegistry) {
         this.intentRegistry = intentRegistry;
@@ -43,28 +44,25 @@ public class MessageDispatch {
 
         try {
             ProcessMessage processMessage = (ProcessMessage) event.getSource();
-
-
-
-
-            if (false) {// go to cancel intent
-                intentHandler = intentRegistry.assignIntent("cancel_intent");
+            if (false) {// go to cancel intent  openAI.getCancelIntent().isPositive(processMessage.getBody())
+                intentHandler = intentRegistry.assignIntent("CANCEL");
             } else {
                 userContext = Optional.ofNullable(redisService.getData(processMessage.getFrom()));
-
                 userContext.filter(Objects::nonNull)
                         .ifPresentOrElse(
                                 userContext1 -> {
-                                    if (userContext1.getCurrent_intent_status() == 1) {
-                                        //Completed Pass to welcome Intent and in welocme intent process as old
-                                        intentRegistry.assignIntent("WELCOME").IntentProcessor(userContext,processMessage);
-                                    } else {
-                                        intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext,processMessage);
-                                    }
+
+                                    Optional.ofNullable(userContext1.getCurrent_intent_status()).filter(i -> i == 0)
+                                            .ifPresentOrElse(integer -> {
+                                                        intentRegistry.assignIntent("WELCOME").IntentProcessor(userContext, processMessage);
+                                                    },
+                                                    () -> {
+                                                        intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext, processMessage);
+                                                    });
+
                                 },
-                                ()->{
-                                    IntentHandler intentHandler1 = intentRegistry.assignIntent("WELCOME");
-                                    intentHandler1.IntentProcessor(userContext,processMessage);
+                                () -> {
+                                    intentRegistry.assignIntent("WELCOME").IntentProcessor(userContext, processMessage);
                                 }
                         );
             }
