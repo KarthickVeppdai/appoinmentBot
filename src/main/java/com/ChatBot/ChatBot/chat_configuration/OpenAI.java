@@ -1,5 +1,6 @@
 package com.ChatBot.ChatBot.chat_configuration;
 
+import com.ChatBot.ChatBot.chat_service.ai_service.AppoinmentAIService;
 import com.ChatBot.ChatBot.chat_service.ai_service.CancelIntentAIService;
 import com.ChatBot.ChatBot.chat_service.ai_service.WelcomeIntentAIService;
 import dev.langchain4j.model.openai.OpenAiChatModel;
@@ -32,6 +33,12 @@ public class OpenAI {
     public WelcomeIntentAIService getWelcomeIntent()
     {
         return AiServices.create(WelcomeIntentAIService.class,getModel());
+    }
+
+    @Bean
+    public AppoinmentAIService getAppoinmentIntent()
+    {
+        return AiServices.create(AppoinmentAIService.class,getModel());
     }
 
 }

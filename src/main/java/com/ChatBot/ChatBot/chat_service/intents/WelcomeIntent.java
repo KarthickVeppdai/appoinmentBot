@@ -55,7 +55,7 @@ public class WelcomeIntent implements IntentHandler {
                                     System.out.println("Going to Appoinment");
 
                                     redisService.saveData(processMessage.getFrom(), saveContext);
-                                    //Information, help and ask for appointmnt to channel
+                                    //Welocme Please Choose doctor Name Send Doctor Information. help and ask for appointmnt to channel
 
                                     break;
 
@@ -73,10 +73,9 @@ public class WelcomeIntent implements IntentHandler {
                                 default:
                                     saveContext = new UserContext("WELCOME", 0,
                                             List.of(""), List.of(0), false, 0, processMessage);
-                                    System.out.println("Going to Welcome");
+                                    System.out.println("Going to Welcome because wrong input ");
                                     redisService.saveData(processMessage.getFrom(), saveContext);
-                                    //send msg to Medium
-
+                                    //send msg to Medium "You entred Wrong Input Pleae entre Options Correctly"
                                     break;
                             }
 
@@ -93,6 +92,7 @@ public class WelcomeIntent implements IntentHandler {
                             //Say welcome Message with Confimartion and past chat details.
                             // You booked Docotr with hope select other options.
                         }
+
                 );
         return null;
     }
