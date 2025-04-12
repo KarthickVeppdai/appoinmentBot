@@ -1,5 +1,6 @@
 package com.ChatBot.ChatBot.chat_service.intents;
 
+import com.ChatBot.ChatBot.Util.UtilityConstants;
 import com.ChatBot.ChatBot.chat_configuration.OpenAI;
 import com.ChatBot.ChatBot.chat_service.ai_service.WelcomeIntentAIService;
 import com.ChatBot.ChatBot.chat_service.mangers.IntentHandler;
@@ -38,8 +39,10 @@ public class WelcomeIntent implements IntentHandler {
     @Autowired
     public TextSupplyService textSupplyService;
 
-    private MessageOutput messageOutput;
+    @Autowired
+    public UtilityConstants utilityConstants;
 
+    private MessageOutput messageOutput;
 
 
     enum MainIntents {
@@ -66,10 +69,16 @@ public class WelcomeIntent implements IntentHandler {
                                     saveContext = new UserContext("APPOINMENT", 0,
                                             List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
                                     System.out.println("Going to Appoinment");
-                                  //  messageDispatcher.sendMessage("Welocme Please Choose doctor Name Send Doctor Information.");
+
                                     redisService.saveData(processMessage.getFrom(), saveContext);
-                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(),"Welcome to ChatBot..","",false,List.of("")));
-                                    //Welocme Please Choose doctor Name Send Doctor Information. help and ask for appointmnt to channel
+
+                                    StringBuilder sb = new StringBuilder(textSupplyService.getMessage("appointment") + "\n");
+                                    for (String doctor : utilityConstants.docotorsList()) {
+                                        sb.append("➡\uFE0F").append(doctor).append("\n");
+                                    }
+
+                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), sb.toString(), "", false, List.of("")));
+
 
                                     break;
 
@@ -79,7 +88,7 @@ public class WelcomeIntent implements IntentHandler {
                                     System.out.println("Going to Report");
 
                                     redisService.saveData(processMessage.getFrom(), saveContext);
-                                    //send msg to Medium
+                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("report"), "", false, List.of("")));
 
                                     break;
 
@@ -90,6 +99,9 @@ public class WelcomeIntent implements IntentHandler {
                                     System.out.println("Going to Welcome because wrong input ");
                                     redisService.saveData(processMessage.getFrom(), saveContext);
                                     //send msg to Medium "You entred Wrong Input Pleae entre Options Correctly"
+                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("welocmerepete"), "", false, List.of("")));
+                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
+
                                     break;
                             }
 
@@ -101,8 +113,9 @@ public class WelcomeIntent implements IntentHandler {
                             System.out.println("Going to Welcome");
                             redisService.saveData(processMessage.getFrom(), saveContext);
 
-                            //sender_id,body,template_name,is_template,template_slots
-                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(),textSupplyService.getMessage("greeting"),"",false,List.of("")));
+
+
+                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
 
                             //send msg like "you alreday completed any other help??"
 

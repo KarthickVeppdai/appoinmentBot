@@ -5,8 +5,11 @@ import com.ChatBot.ChatBot.Util.UtilityConstants;
 import com.ChatBot.ChatBot.chat_configuration.OpenAI;
 import com.ChatBot.ChatBot.chat_service.mangers.IntentHandler;
 import com.ChatBot.ChatBot.database.RedisService;
+import com.ChatBot.ChatBot.models.MessageOutput;
 import com.ChatBot.ChatBot.models.ProcessMessage;
 import com.ChatBot.ChatBot.models.UserContext;
+import com.ChatBot.ChatBot.send_util.MessageDispatcher;
+import com.ChatBot.ChatBot.send_util.TextSupplyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -36,6 +39,12 @@ public class AppoinmtntIntent implements IntentHandler {
     @Autowired
     public UtilityConstants utilityConstants;
 
+    @Autowired
+    public MessageDispatcher messageDispatcher;
+
+    @Autowired
+    public TextSupplyService textSupplyService;
+
     @Override
     public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
         try {
@@ -51,13 +60,13 @@ public class AppoinmtntIntent implements IntentHandler {
                                                     List.of(doctor, "DATE", "SLOT"), List.of(1, 0, 0), false, 1, processMessage);
                                             System.out.println("Docotor Slot completed.Next going for Date" + doctor);
                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                            // send message for requesting date
+                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("date"), "", false, List.of("")));
                                         } else {
                                             saveContext = new UserContext("APPOINMENT", 0,
                                                     List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
                                             System.out.println("Ask Again for Doctor");
                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                            // Send again for doctor
+                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("repeat.doctor"), "", false, List.of("")));
                                         }
                                         break;
                                     case 1:
@@ -70,14 +79,16 @@ public class AppoinmtntIntent implements IntentHandler {
                                                                     List.of(userContext1.getSlots().get(0), extracted_date.toString(), "SLOT"), List.of(1, 1, 0), false, 2, processMessage);
                                                             System.out.println("Date Slot completed.Next going for slot" + date);
                                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                                            // send message for requesting Slot
+                                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("timeslot"), "", false, List.of("")));
+
                                                         },
                                                         () -> {
                                                             saveContext = new UserContext("APPOINMENT", 0,
                                                                     List.of("DOCTOR", "DATE", "SLOT"), List.of(1, 0, 0), false, 1, processMessage);
                                                             System.out.println("Ask Again for Date" + date);
                                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                                            // Send again for date
+                                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("repeat.date"), "", false, List.of("")));
+
                                                         }
                                                 );
                                         break;
@@ -89,6 +100,7 @@ public class AppoinmtntIntent implements IntentHandler {
                                             saveContext = new UserContext("APPOINMENT", 0,
                                                     List.of(userContext1.getSlots().get(0), userContext1.getSlots().get(1),slotTime.toString()), List.of(1, 1, 1), true, 2, processMessage);
                                             System.out.println("Slot Slot completed.Next going for Confirmation" + slotTime);
+                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getAppointmentConfirmation("confirmation",userContext1.getSlots().get(0), userContext1.getSlots().get(1),slotTime.toString()), "", false, List.of("")));
                                             redisService.saveData(processMessage.getFrom(), saveContext);
 
                                         } else {
@@ -96,7 +108,7 @@ public class AppoinmtntIntent implements IntentHandler {
                                                     List.of("DOCTOR", "DATE", "SLOT"), List.of(1, 1, 0), false, 2, processMessage);
                                             System.out.println("Ask Again for slot" + slotTime);
                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                            // send message for requesting Slot
+                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("repeat.timeslot"), "", false, List.of("")));
                                         }
                                         break;
                                     default:
@@ -115,7 +127,11 @@ public class AppoinmtntIntent implements IntentHandler {
                                                             List.of(""), List.of(0), false, 0, processMessage);
                                                     System.out.println("Booking Confirmed-----Going to Welcome");
                                                     redisService.saveData(processMessage.getFrom(), saveContext);
-                                                    // send 2 message one completed message and welcome as usual
+                                                    //send 2 message one completed message and welcome as usual
+                                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("booking.done"), "", false, List.of("")));
+                                                    //greeting need to be customized
+                                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
+
                                                 },
                                                 () -> {
 
@@ -123,8 +139,14 @@ public class AppoinmtntIntent implements IntentHandler {
                                                             List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
                                                     System.out.println("Booking failed going to Appoinment");
                                                     redisService.saveData(processMessage.getFrom(), saveContext);
+                                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("booking.cancel"), "", false, List.of("")));
                                                     // You Cancelled previous appoinment try from first.
                                                     //Welocme Please Choose doctor Name Send Doctor Information. help and ask for appointmnt to channel
+                                                    StringBuilder sb = new StringBuilder(textSupplyService.getMessage("appointment") + "\n");
+                                                    for (String doctor : utilityConstants.docotorsList()) {
+                                                        sb.append("➡\uFE0F").append(doctor).append("\n");
+                                                    }
+                                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), sb.toString(), "", false, List.of("")));
 
 
                                                 }

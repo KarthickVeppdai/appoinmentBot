@@ -17,4 +17,8 @@ public class TextSupplyService {
         //LocaleContextHolder.getLocale()
         return textConfig.messageSource().getMessage(code, null, Locale.ENGLISH);
     }
+
+    public String getAppointmentConfirmation(String code,String doctorName,String date, String time) {
+        return textConfig.messageSource().getMessage("appointment.confirmation", new Object[]{doctorName,date, time},Locale.ENGLISH);
+    }
 }
