@@ -115,6 +115,7 @@ public class AppoinmtntIntent implements IntentHandler {
                                                             List.of(""), List.of(0), false, 0, processMessage);
                                                     System.out.println("Booking Confirmed-----Going to Welcome");
                                                     redisService.saveData(processMessage.getFrom(), saveContext);
+                                                    // send 2 message one completed message and welcome as usual
                                                 },
                                                 () -> {
 

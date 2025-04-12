@@ -4,8 +4,11 @@ import com.ChatBot.ChatBot.chat_configuration.OpenAI;
 import com.ChatBot.ChatBot.chat_service.ai_service.WelcomeIntentAIService;
 import com.ChatBot.ChatBot.chat_service.mangers.IntentHandler;
 import com.ChatBot.ChatBot.database.RedisService;
+import com.ChatBot.ChatBot.models.MessageOutput;
 import com.ChatBot.ChatBot.models.ProcessMessage;
 import com.ChatBot.ChatBot.models.UserContext;
+import com.ChatBot.ChatBot.send_util.MessageDispatcher;
+import com.ChatBot.ChatBot.send_util.TextSupplyService;
 import dev.langchain4j.model.output.structured.Description;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +31,16 @@ public class WelcomeIntent implements IntentHandler {
 
     @Autowired
     public OpenAI openAI;
+
+    @Autowired
+    public MessageDispatcher messageDispatcher;
+
+    @Autowired
+    public TextSupplyService textSupplyService;
+
+    private MessageOutput messageOutput;
+
+
 
     enum MainIntents {
 
@@ -53,8 +66,9 @@ public class WelcomeIntent implements IntentHandler {
                                     saveContext = new UserContext("APPOINMENT", 0,
                                             List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
                                     System.out.println("Going to Appoinment");
-
+                                  //  messageDispatcher.sendMessage("Welocme Please Choose doctor Name Send Doctor Information.");
                                     redisService.saveData(processMessage.getFrom(), saveContext);
+                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(),"Welcome to ChatBot..","",false,List.of("")));
                                     //Welocme Please Choose doctor Name Send Doctor Information. help and ask for appointmnt to channel
 
                                     break;
@@ -85,8 +99,11 @@ public class WelcomeIntent implements IntentHandler {
                             saveContext = new UserContext("WELCOME", 0,
                                     List.of(""), List.of(0), false, 0, processMessage);
                             System.out.println("Going to Welcome");
-
                             redisService.saveData(processMessage.getFrom(), saveContext);
+
+                            //sender_id,body,template_name,is_template,template_slots
+                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(),textSupplyService.getMessage("greeting"),"",false,List.of("")));
+
                             //send msg like "you alreday completed any other help??"
 
                             //Say welcome Message with Confimartion and past chat details.
