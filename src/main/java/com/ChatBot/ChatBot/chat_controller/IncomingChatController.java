@@ -32,12 +32,17 @@ public class IncomingChatController {
         return challange;
     }
 
+    @GetMapping("/")
+    public ResponseEntity test1q(){
+        System.out.println("body");
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/webhook")
     public ResponseEntity webhooktesting(@RequestBody String input_msg) throws JsonProcessingException, ParseException {
         InComingMessage inComingMessage = new InComingMessage();
         inComingMessage.setMsg_body(input_msg);
         applicationEventPublisher.publishEvent(new InComingMessageEvent(inComingMessage, "incoming"));
-        System.out.println("Webhook Ends");
         return ResponseEntity.ok().build();
      }
 

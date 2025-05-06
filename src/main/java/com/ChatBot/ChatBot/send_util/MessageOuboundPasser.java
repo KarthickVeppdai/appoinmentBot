@@ -7,13 +7,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MessageDispatcher {
+public class MessageOuboundPasser {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
     public void sendMessage(MessageOutput messageOutput) {
         rabbitTemplate.convertAndSend(RabbitMQ.GPS_DATA_EXCHANGE,RabbitMQ.ROUTING_KEY_GPS, messageOutput);
-        System.out.println("Sent message: " + messageOutput.getSender_id());
+
+    }
+
+    public void sendMessageMedia(MessageOutput messageOutput) {
+        rabbitTemplate.convertAndSend(RabbitMQ.EXCHANGE_TWO,RabbitMQ.ROUTING_KEY_TWO, messageOutput);
+
     }
 }

@@ -13,11 +13,13 @@ public interface AppoinmentAIService {
     String findDoctor(@V("input")String input, @V("options")List<String> options);
 
     @SystemMessage({
-            "You are a helpful assistant that extracts a date from user input.",
-            "Today is: {{today}}.",
-            "Return the date mentioned by the user, if any, in the format yyyy-MM-dd.",
-            "If date metioned by user is same as {{today}}, respond with 1994-06-25",
-            "Only include the date in your response. If no valid date is found, respond with 1994-06-25."
+            "You are a helpful assistant that extracts a date from natural language input.",
+            "Today's date is: {{today}}.",
+            "Your task is to extract a date from the user's input in the format yyyy-MM-dd.",
+            "You must interpret phrases like 'tomorrow', 'next Saturday', 'in 3 days' etc. based on {{today}}.",
+            "If the resolved date is equal to {{today}}, return '1994-06-25'.",
+            "If no valid date is found in the input, return '1994-06-25'.",
+            "Only return the final date. Do not include any other text."
     })
     @UserMessage("Extract a date from this input: {{date}}. Only respond with a valid date in format yyyy-MM-dd.")
     String extractDate(@V("date")String date, @V("today")String today);

@@ -41,11 +41,10 @@ public class MessageDispatch {
 
     @EventListener(condition = "#event.type.equals('text')")
     public void processTextMessage(ProcessMessageEvent event) {
-
         try {
             ProcessMessage processMessage = (ProcessMessage) event.getSource();
-            if (openAI.getCancelIntent().isPositive(processMessage.getBody())) {// go to cancel intent  openAI.getCancelIntent().isPositive(processMessage.getBody())
-                intentRegistry.assignIntent("CANCEL").IntentProcessor(userContext, processMessage);
+            if (openAI.getCancelIntent().isPositive(processMessage.getBody()) || openAI.getCancelIntent().isMainMenuBack(processMessage.getBody())) {// go to cancel intent  openAI.getCancelIntent().isPositive(processMessage.getBody())
+                intentRegistry.assignIntent("CANCEL").IntentProcessor(Optional.empty(), processMessage);
             } else {
                 userContext = Optional.ofNullable(redisService.getData(processMessage.getFrom()));
                 userContext
@@ -55,20 +54,17 @@ public class MessageDispatch {
                                         //Completed Pass to welcome Intent and in welocme intent process as old
                                         intentRegistry.assignIntent("WELCOME").IntentProcessor(userContext, processMessage);
                                     } else {
-                                        System.out.println("Inside right intent");
                                         intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext, processMessage);
                                     }
                                 },
                                 () -> {
-                                    intentRegistry.assignIntent("WELCOME").IntentProcessor(userContext, processMessage);
+                                    intentRegistry.assignIntent("WELCOME").IntentProcessor(Optional.empty(), processMessage);
                                 }
                         );
             }
         } catch (Exception e) {
             System.out.println(e);
-
         } finally {
-            System.out.println("Inside finally");
             userContext = null;
             intentHandler = null;
         }

@@ -1,5 +1,6 @@
 package com.ChatBot.ChatBot.send_util;
 
+
 import com.ChatBot.ChatBot.miniIO_util.PdfUploaderService;
 import com.ChatBot.ChatBot.models.MessageOutput;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,15 +20,13 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
-@RabbitListener(queues = "whatsapp-queue")
-public class MessageSender {
+@RabbitListener(queues = "whatsapp-msg-media-queue")
+public class MessageSenderMedia {
 
     @Autowired
     private MessageSenderService messageSenderService;
@@ -40,18 +39,13 @@ public class MessageSender {
     @Autowired
     private ExternalHttpProperties externalHttpProperties;
 
-    public JSONObject messageBody(MessageOutput messageOutput) {
-        JSONObject outer = new JSONObject();
-        JSONObject inner = new JSONObject();
-        outer.put("messaging_product", "whatsapp");
-        outer.put("recipient_type", "individual");
-        outer.put("to", messageOutput.getSender_id());
-        outer.put("type", "text");
-        inner.put("preview_url", "false");
-        inner.put("body", messageOutput.getBody());
-        outer.put("text", inner);
-        return outer;
-    }
+    @Autowired
+    public MessageOuboundPasser messageDispatcher;
+
+    @Autowired
+    public TextSupplyService textSupplyService;
+
+
 
     public JSONObject messageDocument(MessageOutput messageOutput,String media_id)
     {
@@ -64,25 +58,11 @@ public class MessageSender {
         inner.put("id", media_id);
         inner.put("caption","Your Report");
         inner.put("filename",messageOutput.getSender_id());
-        outer.put("text", inner);
+        outer.put("document", inner);
         return outer;
     }
 
-    public String sendPostRequestText(MessageOutput messageOutput) {
-        HttpPost post = new HttpPost(externalHttpProperties.getBaseurl());
-        try {
-            for (Map.Entry<String, String> entry : externalHttpProperties.getHeaders().entrySet()) {
-                post.setHeader(entry.getKey(), entry.getValue());
-            }
-            post.setEntity(new StringEntity(messageBody(messageOutput).toString(), StandardCharsets.UTF_8));
-            CloseableHttpResponse response = httpClient.execute(post);
-            return String.valueOf(response.getCode());
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        } finally {
-            post = null;
-        }
-    }
+
 
     public String sendPostRequestMedia(MessageOutput messageOutput) throws Exception {
         String media_id=null;
@@ -105,11 +85,11 @@ public class MessageSender {
 
     public String uploadPdfToWhatsApp(MessageOutput messageOutput) throws Exception {
 
-        HttpPost post = new HttpPost("https://graph.facebook.com/v18.0/"+messageOutput.getSender_id()+"/media");
+        HttpPost post = new HttpPost("https://graph.facebook.com/v22.0/576335785561036/media");
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.addTextBody("messaging_product", "whatsapp");
-        builder.addTextBody("type", "document");
-        builder.addBinaryBody("file", pdfUploaderService.getPdfFromMinio("whatsapp-media",messageOutput.getSender_id()), ContentType.APPLICATION_OCTET_STREAM, messageOutput.getSender_id());
+        builder.addTextBody("messaging_product", "whatsapp",ContentType.TEXT_PLAIN);
+       // builder.addTextBody("type", "document");
+        builder.addBinaryBody("file", pdfUploaderService.getPdfFromMinio("whatsapp-media",messageOutput.getSender_id().substring(2)), ContentType.create("application/pdf"), messageOutput.getSender_id().substring(2));
 
         List<String> values = externalHttpProperties.getHeaders().entrySet().stream()
                 .filter(e -> e.getKey().equals("Authorization"))
@@ -127,6 +107,8 @@ public class MessageSender {
             json = EntityUtils.toString(response.getEntity());
         } catch (ParseException e) {
             throw new RuntimeException(e);
+        }finally {
+
         }
         JsonNode root = new ObjectMapper().readTree(json);
         return root.get("id").asText(); // media_id
@@ -135,6 +117,14 @@ public class MessageSender {
 
     @RabbitHandler
     public void listen(MessageOutput messageOutput) {
-        System.out.println("Sent Message::::" + messageOutput.getBody() + sendPostRequestText(messageOutput));
+        try {
+            System.out.println("Processing Media Message::::" + messageOutput.getSender_id() + sendPostRequestMedia(messageOutput));
+            messageDispatcher.sendMessage(new MessageOutput(messageOutput.getSender_id(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        finally {
+            System.out.println("Media sent failed");
+        }
     }
 }

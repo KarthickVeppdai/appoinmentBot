@@ -8,10 +8,9 @@ import com.ChatBot.ChatBot.database.RedisService;
 import com.ChatBot.ChatBot.models.MessageOutput;
 import com.ChatBot.ChatBot.models.ProcessMessage;
 import com.ChatBot.ChatBot.models.UserContext;
-import com.ChatBot.ChatBot.send_util.MessageDispatcher;
+import com.ChatBot.ChatBot.send_util.MessageOuboundPasser;
 import com.ChatBot.ChatBot.send_util.TextSupplyService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -40,7 +39,7 @@ public class AppoinmtntIntent implements IntentHandler {
     public UtilityConstants utilityConstants;
 
     @Autowired
-    public MessageDispatcher messageDispatcher;
+    public MessageOuboundPasser messageDispatcher;
 
     @Autowired
     public TextSupplyService textSupplyService;
@@ -84,7 +83,7 @@ public class AppoinmtntIntent implements IntentHandler {
                                                         },
                                                         () -> {
                                                             saveContext = new UserContext("APPOINMENT", 0,
-                                                                    List.of("DOCTOR", "DATE", "SLOT"), List.of(1, 0, 0), false, 1, processMessage);
+                                                                    List.of(userContext1.getSlots().get(0), "DATE", "SLOT"), List.of(1, 0, 0), false, 1, processMessage);
                                                             System.out.println("Ask Again for Date" + date);
                                                             redisService.saveData(processMessage.getFrom(), saveContext);
                                                             messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("repeat.date"), "", false, List.of("")));
@@ -105,7 +104,7 @@ public class AppoinmtntIntent implements IntentHandler {
 
                                         } else {
                                             saveContext = new UserContext("APPOINMENT", 0,
-                                                    List.of("DOCTOR", "DATE", "SLOT"), List.of(1, 1, 0), false, 2, processMessage);
+                                                    List.of(userContext1.getSlots().get(0), userContext1.getSlots().get(1), "SLOT"), List.of(1, 1, 0), false, 2, processMessage);
                                             System.out.println("Ask Again for slot" + slotTime);
                                             redisService.saveData(processMessage.getFrom(), saveContext);
                                             messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("repeat.timeslot"), "", false, List.of("")));

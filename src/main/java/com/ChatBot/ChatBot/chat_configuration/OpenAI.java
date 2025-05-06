@@ -2,6 +2,7 @@ package com.ChatBot.ChatBot.chat_configuration;
 
 import com.ChatBot.ChatBot.chat_service.ai_service.AppoinmentAIService;
 import com.ChatBot.ChatBot.chat_service.ai_service.CancelIntentAIService;
+import com.ChatBot.ChatBot.chat_service.ai_service.ReportIntentAIService;
 import com.ChatBot.ChatBot.chat_service.ai_service.WelcomeIntentAIService;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 
@@ -23,22 +24,24 @@ public class OpenAI {
                 .modelName("gpt-4o-mini")
                 .build();
     }
+
     @Bean
-    public CancelIntentAIService getCancelIntent()
-    {
-        return AiServices.create(CancelIntentAIService.class,getModel());
+    public CancelIntentAIService getCancelIntent() {
+        return AiServices.create(CancelIntentAIService.class, getModel());
     }
 
     @Bean
-    public WelcomeIntentAIService getWelcomeIntent()
-    {
-        return AiServices.create(WelcomeIntentAIService.class,getModel());
+    public WelcomeIntentAIService getWelcomeIntent() {
+        return AiServices.create(WelcomeIntentAIService.class, getModel());
     }
 
     @Bean
-    public AppoinmentAIService getAppoinmentIntent()
-    {
-        return AiServices.create(AppoinmentAIService.class,getModel());
+    public AppoinmentAIService getAppoinmentIntent() {
+        return AiServices.create(AppoinmentAIService.class, getModel());
     }
 
+    @Bean
+    public ReportIntentAIService getReportIntent() {
+        return AiServices.create(ReportIntentAIService.class, getModel());
+    }
 }

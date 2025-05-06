@@ -16,6 +16,10 @@ public class RabbitMQ {
     public static final String GPS_QUEUE = "whatsapp-queue";
     public static final String ROUTING_KEY_GPS = "whatsapp";
 
+    public static final String QUEUE_TWO = "whatsapp-msg-media-queue";
+    public static final String EXCHANGE_TWO = "whatsapp-media-exchange";
+    public static final String ROUTING_KEY_TWO = "whatsapp-media";
+
     @Bean
     public DirectExchange gpsDirectExchange() {
         return new DirectExchange(GPS_DATA_EXCHANGE);
@@ -30,6 +34,21 @@ public class RabbitMQ {
     public Binding gpsBinding() {
         return BindingBuilder.bind(queue()).to(gpsDirectExchange()).with(ROUTING_KEY_GPS);
     }
+
+    @Bean
+    public Queue queueTwo() {
+        return new Queue(QUEUE_TWO);
+    }
+
+    @Bean
+    public DirectExchange exchangeTwo() {
+        return new DirectExchange(EXCHANGE_TWO);
+    }
+
+    @Bean
+    public Binding bindingTwo(Queue queueTwo, DirectExchange exchangeTwo) {
+        return BindingBuilder.bind(queueTwo).to(exchangeTwo).with(ROUTING_KEY_TWO);    }
+
 
     @Bean
     public MessageConverter jsonMessageConverter() {
