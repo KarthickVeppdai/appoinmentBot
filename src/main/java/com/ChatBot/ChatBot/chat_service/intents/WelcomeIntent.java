@@ -48,6 +48,8 @@ public class WelcomeIntent implements IntentHandler {
 
 
         WELCOME,
+
+        INFO
     }
 
     @Override
@@ -79,6 +81,15 @@ public class WelcomeIntent implements IntentHandler {
                                     System.out.println("::::::Setting Report Intent for 1 st Time:::::::");
                                     redisService.saveData(processMessage.getFrom(), saveContext);
                                     messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("report"), "", false, List.of("")));
+
+                                    break;
+
+                                case INFO:
+                                    saveContext = new UserContext("INFO", 0,
+                                            List.of(""), List.of(0), false, 0, processMessage);
+                                    System.out.println("::::::Setting INFO Intent for 1 st Time:::::::");
+                                    redisService.saveData(processMessage.getFrom(), saveContext);
+                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("info"), "", false, List.of("")));
 
                                     break;
 

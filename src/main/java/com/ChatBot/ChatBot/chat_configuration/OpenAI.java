@@ -6,6 +6,7 @@ import com.ChatBot.ChatBot.chat_service.ai_service.ReportIntentAIService;
 import com.ChatBot.ChatBot.chat_service.ai_service.WelcomeIntentAIService;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 
+import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.service.AiServices;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

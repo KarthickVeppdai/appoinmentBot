@@ -43,7 +43,7 @@ public class MessageDispatch {
     public void processTextMessage(ProcessMessageEvent event) {
         try {
             ProcessMessage processMessage = (ProcessMessage) event.getSource();
-            if (openAI.getCancelIntent().isPositive(processMessage.getBody()) || openAI.getCancelIntent().isMainMenuBack(processMessage.getBody())) {// go to cancel intent  openAI.getCancelIntent().isPositive(processMessage.getBody())
+            if (openAI.getCancelIntent().isPositive(processMessage.getBody())) {// go to cancel intent  openAI.getCancelIntent().isPositive(processMessage.getBody())
                 intentRegistry.assignIntent("CANCEL").IntentProcessor(Optional.empty(), processMessage);
             } else {
                 userContext = Optional.ofNullable(redisService.getData(processMessage.getFrom()));

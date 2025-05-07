@@ -12,11 +12,13 @@ public interface WelcomeIntentAIService {
         @Description("Like 1 or Appoinment or 1.Appoinment")
         APPOINMENT,
 
-        @Description("Like 1 or REPORT or 1.REPORT")
+        @Description("Like 2 or REPORT or 2.REPORT")
         REPORT,
 
         @Description("Any text other than enum APPOINMENT, REPORT ) ")
         WELCOME,
+        @Description("Like 3 or Info or 3.Info or Information")
+        INFO
     }
 
         @UserMessage("Determine the following Input according to Description: {{it}}")
