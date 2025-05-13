@@ -66,7 +66,7 @@ public class WelcomeIntent implements IntentHandler {
                                 case APPOINMENT:
                                     saveContext = new UserContext("APPOINMENT", 0,
                                             List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
-                                    System.out.println("Inside Welcome passing to Appoinment");
+
                                     redisService.saveData(processMessage.getFrom(), saveContext);
                                     StringBuilder sb = new StringBuilder(textSupplyService.getMessage("appointment") + "\n");
                                     for (String doctor : utilityConstants.docotorsList()) {
@@ -78,7 +78,7 @@ public class WelcomeIntent implements IntentHandler {
                                 case REPORT:
                                     saveContext = new UserContext("REPORT", 0,
                                             List.of("ID"), List.of(0), false, 0, processMessage);
-                                    System.out.println("::::::Setting Report Intent for 1 st Time:::::::");
+
                                     redisService.saveData(processMessage.getFrom(), saveContext);
                                     messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("report"), "", false, List.of("")));
 
@@ -87,7 +87,7 @@ public class WelcomeIntent implements IntentHandler {
                                 case INFO:
                                     saveContext = new UserContext("INFO", 0,
                                             List.of(""), List.of(0), false, 0, processMessage);
-                                    System.out.println("::::::Setting INFO Intent for 1 st Time:::::::");
+
                                     redisService.saveData(processMessage.getFrom(), saveContext);
                                     messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("info"), "", false, List.of("")));
 

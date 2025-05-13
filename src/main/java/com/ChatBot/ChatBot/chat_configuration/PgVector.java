@@ -1,5 +1,6 @@
 package com.ChatBot.ChatBot.chat_configuration;
 
+import com.ChatBot.ChatBot.chat_service.ai_service.InfoAIService;
 import com.ChatBot.ChatBot.rag_service.HospitalInfoRag;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.segment.TextSegment;
@@ -9,7 +10,7 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
-import dev.langchain4j.retriever.EmbeddingStoreRetriever;
+
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
@@ -50,7 +51,7 @@ public class PgVector {
         return PgVectorEmbeddingStore.builder()
                 .host("127.0.0.1")
                 .port(5432)
-                .database("mydatabase")
+                .database("postgres")
                 .user("postgres")
                 .password("postgres")
                 .table("hospital")
@@ -61,6 +62,11 @@ public class PgVector {
     @Bean
     public EmbeddingStoreIngestor embeddingStoreIngestor() {
         return EmbeddingStoreIngestor.builder()
+                .documentTransformer(document -> {
+                    document.metadata().put("userId", "12345");
+                    return document;
+                })
+
                 .embeddingModel(allminiLmL6V2EmbeddingModel())
                 .embeddingStore(pgVectorEmbeddingStore())
                 .documentSplitter(DocumentSplitters.recursive(500, 50)) // 500 tokens with 50 overlap
@@ -78,8 +84,8 @@ public class PgVector {
     }
 
     @Bean
-    public HospitalInfoRag hospitalInfoRag() {
-        return AiServices.builder(HospitalInfoRag.class)
+    public InfoAIService hospitalInfoRag() {
+        return AiServices.builder(InfoAIService.class)
                 .chatLanguageModel(getAIModelForRAG())
                 .contentRetriever(contentRetriever())
                 .build();

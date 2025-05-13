@@ -17,7 +17,7 @@ public interface WelcomeIntentAIService {
 
         @Description("Any text other than enum APPOINMENT, REPORT ) ")
         WELCOME,
-        @Description("Like 3 or Info or 3.Info or Information")
+        @Description("Information,Info,Ask details,detals,ask")
         INFO
     }
 
