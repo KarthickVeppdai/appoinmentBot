@@ -56,72 +56,50 @@ public class WelcomeIntent implements IntentHandler {
     public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
 
 
-        userContext
-                .ifPresentOrElse(
-                        userContext1 -> {
+        userContext.ifPresentOrElse(userContext1 -> {
 
-                            // Write One if condition when user completes intent.
+                    // Write One if condition when user completes intent.
 
-                            switch (openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody())) {
-                                case APPOINMENT:
-                                    saveContext = new UserContext("APPOINMENT", 0,
-                                            List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
-
-                                    redisService.saveData(processMessage.getFrom(), saveContext);
-                                    StringBuilder sb = new StringBuilder(textSupplyService.getMessage("appointment") + "\n");
-                                    for (String doctor : utilityConstants.docotorsList()) {
-                                        sb.append("➡\uFE0F").append(doctor).append("\n");
-                                    }
-                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), sb.toString(), "", false, List.of("")));
-                                    break;
-
-                                case REPORT:
-                                    saveContext = new UserContext("REPORT", 0,
-                                            List.of("ID"), List.of(0), false, 0, processMessage);
-
-                                    redisService.saveData(processMessage.getFrom(), saveContext);
-                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("report"), "", false, List.of("")));
-
-                                    break;
-
-                                case INFO:
-                                    saveContext = new UserContext("INFO", 0,
-                                            List.of(""), List.of(0), false, 0, processMessage);
-
-                                    redisService.saveData(processMessage.getFrom(), saveContext);
-                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("info"), "", false, List.of("")));
-
-                                    break;
-
-
-                                default:
-                                    saveContext = new UserContext("WELCOME", 0,
-                                            List.of(""), List.of(0), false, 0, processMessage);
-                                    System.out.println("Going to Welcome because wrong input ");
-                                    redisService.saveData(processMessage.getFrom(), saveContext);
-                                    //send msg to Medium "You entred Wrong Input Pleae entre Options Correctly"
-                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("welocmerepete"), "", false, List.of("")));
-                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
-                                    break;
-                            }
-
-                        },
-                        () -> {
-                            // Called when new and cancel intent//
-
-                            saveContext = new UserContext("WELCOME", 0,
-                                    List.of(""), List.of(0), false, 0, processMessage);
-                            System.out.println("Going to Welcome");
+                    switch (openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody())) {
+                        case APPOINMENT:
+                            saveContext = new UserContext("APPOINMENT", 0, List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
                             redisService.saveData(processMessage.getFrom(), saveContext);
-                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
+                            StringBuilder sb = new StringBuilder(textSupplyService.getMessage("appointment") + "\n");
+                            for (String doctor : utilityConstants.docotorsList()) {
+                                sb.append("➡\uFE0F").append(doctor).append("\n");
+                            }
+                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), sb.toString(), "", false, List.of("")));
+                            break;
 
-                            //send msg like "you alreday completed any other help??"
+                        case REPORT:
+                            saveContext = new UserContext("REPORT", 0, List.of("ID"), List.of(0), false, 0, processMessage);
+                            redisService.saveData(processMessage.getFrom(), saveContext);
+                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("report"), "", false, List.of("")));
+                            break;
 
-                            //Say welcome Message with Confimartion and past chat details.
-                            // You booked Docotr with hope select other options.
-                        }
+                        case INFO:
+                            saveContext = new UserContext("INFO", 0, List.of(""), List.of(0), false, 0, processMessage);
+                            redisService.saveData(processMessage.getFrom(), saveContext);
+                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("info"), "", false, List.of("")));
+                            break;
 
-                );
+
+                        default:
+                            saveContext = new UserContext("WELCOME", 0, List.of(""), List.of(0), false, 0, processMessage);
+                            redisService.saveData(processMessage.getFrom(), saveContext);
+                         //   messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("welocmerepete"), "", false, List.of("")));
+                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "welocme_repete", true, List.of("")));
+                            break;
+                    }
+
+                }, () -> {
+                    // Called when fresh or user canceled/exit intent
+
+                    saveContext = new UserContext("WELCOME", 0, List.of(""), List.of(0), false, 0, processMessage);
+                    redisService.saveData(processMessage.getFrom(), saveContext);
+                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "welcome_intent", true, List.of("")));
+                }
+        );
         return null;
     }
 }

@@ -14,12 +14,16 @@ public interface AppoinmentAIService {
 
     @SystemMessage({
             "You are a helpful assistant that extracts a date from natural language input.",
+            "Your task is to extract a date from the user's input",
             "Today's date is: {{today}}.",
-            "Your task is to extract a date from the user's input in the format yyyy-MM-dd.",
-            "You must interpret phrases like 'tomorrow', 'next Saturday', 'in 3 days' etc. based on {{today}}.",
-            "If the resolved date is equal to {{today}}, return '1994-06-25'.",
-            "If no valid date is found in the input, return '1994-06-25'.",
-            "Only return the final date. Do not include any other text."
+            "Examples:",
+            "  Input: 'in 3 days' -> Output: '2025-05-16' (if today is 2025-05-13)",
+            "  Input: 'today' -> Output: '1994-06-25'",
+            "  Input: 'next Saturday' -> Output: '2025-05-17'",
+            "Rules:",
+            "- Output must be in format yyyy-MM-dd",
+            "- If no valid date is found, or date is today, return '1994-06-25'",
+            "- Do not include any other text."
     })
     @UserMessage("Extract a date from this input: {{date}}. Only respond with a valid date in format yyyy-MM-dd.")
     String extractDate(@V("date")String date, @V("today")String today);

@@ -4,6 +4,8 @@ package com.ChatBot.ChatBot.miniIO_util;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
+import io.minio.StatObjectArgs;
+import io.minio.errors.MinioException;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
@@ -44,5 +46,21 @@ public class PdfUploaderService {
                         .object(objectName)
                         .build()
         );
+    }
+
+    public boolean checkIfObjectExists(String bucketName, String objectName) {
+        try {
+            minioClient.statObject(
+                    StatObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .build()
+            );
+            return true; // Object exists
+        } catch (MinioException e) {
+            return false; // Object doesn't exist or other error
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

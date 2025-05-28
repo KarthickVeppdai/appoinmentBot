@@ -46,9 +46,7 @@ public class MessageSenderMedia {
     public TextSupplyService textSupplyService;
 
 
-
-    public JSONObject messageDocument(MessageOutput messageOutput,String media_id)
-    {
+    public JSONObject messageDocument(MessageOutput messageOutput, String media_id) {
         JSONObject outer = new JSONObject();
         JSONObject inner = new JSONObject();
         outer.put("messaging_product", "whatsapp");
@@ -56,30 +54,29 @@ public class MessageSenderMedia {
         outer.put("to", messageOutput.getSender_id());
         outer.put("type", "document");
         inner.put("id", media_id);
-        inner.put("caption","Your Report");
-        inner.put("filename",messageOutput.getSender_id());
+        inner.put("caption", "Your Report");
+        inner.put("filename", messageOutput.getSender_id());
         outer.put("document", inner);
         return outer;
     }
 
 
-
     public String sendPostRequestMedia(MessageOutput messageOutput) throws Exception {
-        String media_id=null;
-        media_id= uploadPdfToWhatsApp(messageOutput);
+        String media_id = null;
+        media_id = uploadPdfToWhatsApp(messageOutput);
         HttpPost post = new HttpPost(externalHttpProperties.getBaseurl());
         try {
             for (Map.Entry<String, String> entry : externalHttpProperties.getHeaders().entrySet()) {
                 post.setHeader(entry.getKey(), entry.getValue());
             }
-            post.setEntity(new StringEntity(messageDocument(messageOutput,media_id).toString(), StandardCharsets.UTF_8));
+            post.setEntity(new StringEntity(messageDocument(messageOutput, media_id).toString(), StandardCharsets.UTF_8));
             CloseableHttpResponse response = httpClient.execute(post);
             return String.valueOf(response.getCode());
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         } finally {
             post = null;
-            media_id=null;
+            media_id = null;
         }
     }
 
@@ -87,9 +84,9 @@ public class MessageSenderMedia {
 
         HttpPost post = new HttpPost("https://graph.facebook.com/v22.0/576335785561036/media");
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.addTextBody("messaging_product", "whatsapp",ContentType.TEXT_PLAIN);
-       // builder.addTextBody("type", "document");
-        builder.addBinaryBody("file", pdfUploaderService.getPdfFromMinio("whatsapp-media",messageOutput.getSender_id().substring(2)), ContentType.create("application/pdf"), messageOutput.getSender_id().substring(2));
+        builder.addTextBody("messaging_product", "whatsapp", ContentType.TEXT_PLAIN);
+        // builder.addTextBody("type", "document");
+        builder.addBinaryBody("file", pdfUploaderService.getPdfFromMinio("whatsapp-media", messageOutput.getSender_id().substring(2)), ContentType.create("application/pdf"), messageOutput.getSender_id().substring(2));
 
         List<String> values = externalHttpProperties.getHeaders().entrySet().stream()
                 .filter(e -> e.getKey().equals("Authorization"))
@@ -107,7 +104,7 @@ public class MessageSenderMedia {
             json = EntityUtils.toString(response.getEntity());
         } catch (ParseException e) {
             throw new RuntimeException(e);
-        }finally {
+        } finally {
 
         }
         JsonNode root = new ObjectMapper().readTree(json);
@@ -118,12 +115,17 @@ public class MessageSenderMedia {
     @RabbitHandler
     public void listen(MessageOutput messageOutput) {
         try {
-            System.out.println("Processing Media Message::::" + messageOutput.getSender_id() + sendPostRequestMedia(messageOutput));
-            messageDispatcher.sendMessage(new MessageOutput(messageOutput.getSender_id(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
+            if (pdfUploaderService.checkIfObjectExists("whatsapp-media",messageOutput.getBody())) {
+                System.out.println("Processing Media Message::::" + messageOutput.getSender_id() + sendPostRequestMedia(messageOutput));
+                messageDispatcher.sendMessage(new MessageOutput(messageOutput.getSender_id(), textSupplyService.getMessage("greeting"), "welcome_intent", true, List.of("")));
+            } else {
+
+                messageDispatcher.sendMessage(new MessageOutput(messageOutput.getSender_id(), "No Report found for Your number"+"\n"+textSupplyService.getMessage("greeting"), "welcome_intent", false, List.of("")));
+            }
+
         } catch (Exception e) {
             System.out.println(e);
-        }
-        finally {
+        } finally {
             System.out.println("Media sent failed");
         }
     }

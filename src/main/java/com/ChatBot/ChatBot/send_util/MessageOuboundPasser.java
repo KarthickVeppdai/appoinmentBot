@@ -17,6 +17,11 @@ public class MessageOuboundPasser {
 
     }
 
+    public void sendTemplate(MessageOutput messageOutput) {
+        rabbitTemplate.convertAndSend(RabbitMQ.GPS_DATA_EXCHANGE,RabbitMQ.ROUTING_KEY_GPS, messageOutput);
+
+    }
+
     public void sendMessageMedia(MessageOutput messageOutput) {
         rabbitTemplate.convertAndSend(RabbitMQ.EXCHANGE_TWO,RabbitMQ.ROUTING_KEY_TWO, messageOutput);
 

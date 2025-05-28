@@ -35,7 +35,7 @@ public class ReportIntent implements IntentHandler {
     @Override
     public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
 
-        System.out.println("::::Inside report Intent::::");
+
         if (!userContext.get().getSlots_fullfilled()) {
 
             if (true)// check for vaild ID or phone no
@@ -43,10 +43,10 @@ public class ReportIntent implements IntentHandler {
                 // send pdf or send no pdf found
                 saveContext = new UserContext("WELCOME", 0,
                         List.of(""), List.of(0), false, 0, processMessage);
-                System.out.println("::::Sent report::::Going for Welcome::::");
+
                 redisService.saveData(processMessage.getFrom(), saveContext);
                 //send PDF/Document to user
-                messageDispatcher.sendMessageMedia(new MessageOutput(processMessage.getFrom(), "Your Report", "", false, List.of("")));
+                messageDispatcher.sendMessageMedia(new MessageOutput(processMessage.getFrom(), "Your Report. Please dowload ", "", false, List.of("")));
                // messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
             } else {
                 saveContext = new UserContext("REPORT", 1,

@@ -70,20 +70,35 @@ public class WhatsAppMessageParser {
                         // call send message function Ask for proper resoponse accoring to chat contxt
                         break;
                     case "button" :
-                        from=message.findValuesAsText("from").get(0);
-                        msg_id=message.findValuesAsText("id").get(0);
-                        button = node.findValue("button");
-                        button_text = button.findValuesAsText("text").get(0);
-                        //   message_wta = new Message(from,msg_id,button_text,message_type.get(0));
+
+
+                        applicationEventPublisher.publishEvent(new ProcessMessageEvent(new ProcessMessage(
+                               message.findValuesAsText("from").getLast(),
+                               message.findValuesAsText("id").getFirst(),
+                               message.findValuesAsText("text").getFirst(),
+                                message.findValuesAsText("type").getFirst(),
+                                tImeStampConverter.timeStampConverter(message.findValuesAsText("timestamp").getFirst())
+                       ), "text"));
                         break;
                     case "interactive","list_reply","button_reply":
-                        from=message.findValuesAsText("from").get(0);
-                        msg_id=message.findValuesAsText("id").get(0);
+
+
+
+
+
+
                         list = node.findValue("interactive");
                         list_text= list.findValuesAsText("title").get(0);
                         interactive_type= list.findValuesAsText("type").get(0);
-                        //message_wta = new Message(from,msg_id,list_text,interactive_type);
-                        // Write for 2 constions 1`.Received Answer to Reply Button and 2. Received Answer From List Message
+
+                        applicationEventPublisher.publishEvent(new ProcessMessageEvent(new ProcessMessage(
+                                message.findValuesAsText("from").getFirst(),
+                                message.findValuesAsText("id").getFirst(),
+                                list.findValuesAsText("title").getFirst(),
+                                message.findValuesAsText("type").getFirst(),
+                                tImeStampConverter.timeStampConverter(message.findValuesAsText("timestamp").getFirst())
+                        ), "text"));
+
                         break;
                     default :
                         // Location  and Contact Messages are avoided and no case is written ,handled by default.
@@ -100,23 +115,23 @@ public class WhatsAppMessageParser {
                 switch (status_type.isEmpty()?"nothing":status_type.get(0)) {
                     case "sent" :
                         recipient_id = statuses.findValuesAsText("recipient_id").get(0);
-                        System.out.println(recipient_id+"sent");
+
                         break;
                     case "read" :
                         recipient_id = statuses.findValuesAsText("recipient_id").get(0);
-                        System.out.println(recipient_id+"read");
+
                         break;
                     case "failed" :
                         recipient_id = statuses.findValuesAsText("recipient_id").get(0);
-                        System.out.println(recipient_id+"faoled");
+
                         break;
                     case "delivered":
                         recipient_id = statuses.findValuesAsText("recipient_id").get(0);
-                        System.out.println(recipient_id+"delivered");
+
                         break;
                     default :
                         recipient_id = statuses.findValuesAsText("recipient_id").get(0);
-                        System.out.println(recipient_id+"other");
+
                         // only 200 response, no read recipt
 
                 };

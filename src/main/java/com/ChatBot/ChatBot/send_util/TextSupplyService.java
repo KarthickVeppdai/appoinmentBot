@@ -19,6 +19,6 @@ public class TextSupplyService {
     }
 
     public String getAppointmentConfirmation(String code,String doctorName,String date, String time) {
-        return textConfig.messageSource().getMessage("appointment.confirmation", new Object[]{doctorName,date, time},Locale.ENGLISH);
+        return textConfig.messageSource().getMessage("confirm", new Object[]{doctorName,date, time},Locale.ENGLISH);
     }
 }

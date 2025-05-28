@@ -41,13 +41,13 @@ public class InfoIntent implements IntentHandler {
     public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
 
 
-        System.out.println("::::Inside Info Intent::::");
+
         saveContext = new UserContext("INFO", 0,
                 List.of("ID"), List.of(0), false, 0, processMessage);
         redisService.saveData(processMessage.getFrom(), saveContext);
-        messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), "Your Required Information are:", "", false, List.of("")));
-        messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), pgVector.hospitalInfoRag().answer(processMessage.getBody()).toString(), "", false, List.of("")));
-        messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("info.repeat"), "", false, List.of("")));
+
+        // messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), pgVector.hospitalInfoRag().answer(processMessage.getBody()).toString(), "", false, List.of("")));
+        messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), "Your Required Information" + pgVector.hospitalInfoRag().answer(processMessage.getBody()).toString() + textSupplyService.getMessage("info.repeat"), "", false, List.of("")));
         return null;
 
     }

@@ -33,9 +33,6 @@ public class CancelIntent implements IntentHandler {
     @Override
     public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
 
-        //Information, help and next what to do
-        System.out.println("Inside to Cancel");
-
 
         redisService.deleteData(processMessage.getFrom());
         messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("cancle.intent.empty"), "", false, List.of("")));
