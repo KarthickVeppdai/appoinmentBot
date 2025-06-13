@@ -48,7 +48,6 @@ public class AppoinmtntIntent implements IntentHandler {
     @Override
     public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
         try {
-
             userContext.filter(userContext1 -> userContext1.getSlots_fullfilled() == false)
                     .ifPresentOrElse(
                             userContext1 -> {
@@ -56,16 +55,40 @@ public class AppoinmtntIntent implements IntentHandler {
                                     case 0:
                                         doctor = openAI.getAppoinmentIntent().findDoctor(processMessage.getBody(), utilityConstants.docotorsList());
                                         if (!doctor.equalsIgnoreCase("notfound")) {
-                                            saveContext = new UserContext("APPOINMENT", 0,
-                                                    List.of(doctor, "DATE", "SLOT"), List.of(1, 0, 0), false, 1, processMessage);
+                                            saveContext = UserContext.builder()
+                                                    .current_intent("APPOINMENT")
+                                                    .current_intent_status(0)
+                                                    .slots(List.of(doctor, "DATE", "SLOT"))
+                                                    .slots_status(List.of(1, 0, 0))
+                                                    .slots_fullfilled(false)
+                                                    .current_slot_id(1)
+                                                    .processMessage(processMessage)
+                                                    .build();
                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("date"), "date_slot", true, List.of("")));
-                                        } else {
-                                            saveContext = new UserContext("APPOINMENT", 0,
-                                                    List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
+                                            messageDispatcher.sendMessage(
+                                                    MessageOutput.builder()
+                                                            .sender_id(processMessage.getFrom())
+                                                            .is_template(true)
+                                                            .template_name("date_slot")
+                                                            .build());
 
+                                        } else {
+                                            saveContext = UserContext.builder()
+                                                    .current_intent("APPOINMENT")
+                                                    .current_intent_status(0)
+                                                    .slots(List.of("DOCTOR", "DATE", "SLOT"))
+                                                    .slots_status(List.of(0, 0, 0))
+                                                    .slots_fullfilled(false)
+                                                    .current_slot_id(0)
+                                                    .processMessage(processMessage)
+                                                    .build();
                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("repeat.doctor"), "", false, List.of("")));
+                                            messageDispatcher.sendMessage(
+                                                    MessageOutput.builder()
+                                                            .sender_id(processMessage.getFrom())
+                                                            .body(textSupplyService.getMessage("repeat.doctor"))
+                                                            .is_template(false)
+                                                            .build());
                                         }
                                         break;
                                     case 1:
@@ -74,17 +97,40 @@ public class AppoinmtntIntent implements IntentHandler {
                                         extracted_date.filter(extracted_date -> (!extracted_date.isBefore(LocalDate.now()) && !extracted_date.isAfter(LocalDate.now().plusDays(7))))
                                                 .ifPresentOrElse(
                                                         extracted_date -> {
-                                                            saveContext = new UserContext("APPOINMENT", 0,
-                                                                    List.of(userContext1.getSlots().get(0), extracted_date.toString(), "SLOT"), List.of(1, 1, 0), false, 2, processMessage);
+                                                            saveContext = UserContext.builder()
+                                                                    .current_intent("APPOINMENT")
+                                                                    .current_intent_status(0)
+                                                                    .slots(List.of(userContext1.getSlots().get(0), extracted_date.toString(), "SLOT"))
+                                                                    .slots_status(List.of(1, 1, 0))
+                                                                    .slots_fullfilled(false)
+                                                                    .current_slot_id(2)
+                                                                    .processMessage(processMessage)
+                                                                    .build();
                                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("timeslot"), "time_slot", true, List.of("")));
-
+                                                            messageDispatcher.sendMessage(
+                                                                    MessageOutput.builder()
+                                                                            .sender_id(processMessage.getFrom())
+                                                                            .is_template(true)
+                                                                            .template_name("time_slot")
+                                                                            .build());
                                                         },
                                                         () -> {
-                                                            saveContext = new UserContext("APPOINMENT", 0,
-                                                                    List.of(userContext1.getSlots().get(0), "DATE", "SLOT"), List.of(1, 0, 0), false, 1, processMessage);
+                                                            saveContext = UserContext.builder()
+                                                                    .current_intent("APPOINMENT")
+                                                                    .current_intent_status(0)
+                                                                    .slots(List.of(userContext1.getSlots().get(0), "DATE", "SLOT"))
+                                                                    .slots_status(List.of(1, 0, 0))
+                                                                    .slots_fullfilled(false)
+                                                                    .current_slot_id(1)
+                                                                    .processMessage(processMessage)
+                                                                    .build();
                                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("repeat.date"), "date_slot_repeat", true, List.of("")));
+                                                            messageDispatcher.sendMessage(
+                                                                    MessageOutput.builder()
+                                                                            .sender_id(processMessage.getFrom())
+                                                                            .is_template(true)
+                                                                            .template_name("date_slot_repeat")
+                                                                            .build());
 
                                                         }
                                                 );
@@ -93,17 +139,43 @@ public class AppoinmtntIntent implements IntentHandler {
                                         slot = openAI.getAppoinmentIntent().extractSlot(processMessage.getBody());
                                         slotTime = LocalTime.parse(slot);
                                         now = LocalTime.now();
-                                        if (!(slotTime.getHour()==00)) {
-                                            saveContext = new UserContext("APPOINMENT", 0,
-                                                    List.of(userContext1.getSlots().get(0), userContext1.getSlots().get(1),slotTime.toString()), List.of(1, 1, 1), true, 2, processMessage);
-                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getAppointmentConfirmation("confirm",userContext1.getSlots().get(0), userContext1.getSlots().get(1),slotTime.toString()), "", false, List.of("")));
+                                        if (!(slotTime.getHour() == 00)) {
+                                            saveContext = UserContext.builder()
+                                                    .current_intent("APPOINMENT")
+                                                    .current_intent_status(0)
+                                                    .slots(List.of(userContext1.getSlots().get(0), userContext1.getSlots().get(1), slotTime.toString()))
+                                                    .slots_status(List.of(1, 1, 1))
+                                                    .slots_fullfilled(true)
+                                                    .current_slot_id(2)
+                                                    .processMessage(processMessage)
+                                                    .build();
                                             redisService.saveData(processMessage.getFrom(), saveContext);
+                                            messageDispatcher.sendMessage(
+                                                    MessageOutput.builder()
+                                                            .sender_id(processMessage.getFrom())
+                                                            .body(textSupplyService.getAppointmentConfirmation("confirm", userContext1.getSlots().get(0),
+                                                                    userContext1.getSlots().get(1), slotTime.toString()))
+                                                            .is_template(false)
+                                                            .build());
 
                                         } else {
-                                            saveContext = new UserContext("APPOINMENT", 0,
-                                                    List.of(userContext1.getSlots().get(0), userContext1.getSlots().get(1), "SLOT"), List.of(1, 1, 0), false, 2, processMessage);
+
+                                            saveContext = UserContext.builder()
+                                                    .current_intent("APPOINMENT")
+                                                    .current_intent_status(0)
+                                                    .slots(List.of(userContext1.getSlots().get(0), userContext1.getSlots().get(1), "SLOT"))
+                                                    .slots_status(List.of(1, 1, 0))
+                                                    .slots_fullfilled(false)
+                                                    .current_slot_id(2)
+                                                    .processMessage(processMessage)
+                                                    .build();
                                             redisService.saveData(processMessage.getFrom(), saveContext);
-                                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("repeat.timeslot"), "time_slot_repeat", true, List.of("")));
+                                            messageDispatcher.sendMessage(
+                                                    MessageOutput.builder()
+                                                            .sender_id(processMessage.getFrom())
+                                                            .is_template(true)
+                                                            .template_name("time_slot_repeat")
+                                                            .build());
                                         }
                                         break;
                                     default:
@@ -118,31 +190,43 @@ public class AppoinmtntIntent implements IntentHandler {
                                                 success -> {
                                                     //Save to Appoinment Table
                                                     //Send Message You Booked and Appoinemt Confirmed
-                                                    saveContext = new UserContext("WELCOME", 0,
-                                                            List.of(""), List.of(0), false, 0, processMessage);
-                                                    redisService.saveData(processMessage.getFrom(), saveContext);
-                                                    //send 2 message one completed message and welcome as usual
-                                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("booking.done"), "booking_done", true, List.of("")));
-                                                    //greeting need to be customized
-                                                 //   messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("booking.done.greeting"), "", false, List.of("")));
 
+                                                    saveContext = UserContext.builder()
+                                                            .current_intent("WELCOME")
+                                                            .current_intent_status(0)
+                                                            .slots_fullfilled(false)
+                                                            .processMessage(processMessage)
+                                                            .build();
+                                                    redisService.saveData(processMessage.getFrom(), saveContext);
+                                                    messageDispatcher.sendMessage(
+                                                            MessageOutput.builder()
+                                                                    .sender_id(processMessage.getFrom())
+                                                                    .is_template(true)
+                                                                    .template_name("booking_done")
+                                                                    .build());
                                                 },
                                                 () -> {
-
-                                                    saveContext = new UserContext("APPOINMENT", 0,
-                                                            List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
-
+                                                    saveContext = UserContext.builder()
+                                                            .current_intent("APPOINMENT")
+                                                            .current_intent_status(0)
+                                                            .slots(List.of("DOCTOR", "DATE", "SLOT"))
+                                                            .slots_status(List.of(0, 0, 0))
+                                                            .slots_fullfilled(false)
+                                                            .current_slot_id(0)
+                                                            .processMessage(processMessage)
+                                                            .build();
                                                     redisService.saveData(processMessage.getFrom(), saveContext);
-                                                  //  messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("booking.cancel"), "", false, List.of("")));
-                                                    // You Cancelled previous appoinment try from first.
-                                                    //Welocme Please Choose doctor Name Send Doctor Information. help and ask for appointmnt to channel
-                                                    StringBuilder sb = new StringBuilder(textSupplyService.getMessage("booking.cancel")+"\n"+textSupplyService.getMessage("appointment") + "\n");
+                                                    StringBuilder sb = new StringBuilder(textSupplyService.getMessage("booking.cancel") + "\n" + textSupplyService.getMessage("appointment") + "\n");
                                                     for (String doctor : utilityConstants.docotorsList()) {
                                                         sb.append("➡\uFE0F").append(doctor).append("\n");
                                                     }
-                                                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), sb.toString(), "", false, List.of("")));
-
-
+                                                    messageDispatcher.sendMessage(
+                                                            MessageOutput.builder()
+                                                                    .sender_id(processMessage.getFrom())
+                                                                    .is_template(false)
+                                                                    .body(sb.toString())
+                                                                    .template_name("booking_done")
+                                                                    .build());
                                                 }
                                         );
                             }
@@ -151,7 +235,8 @@ public class AppoinmtntIntent implements IntentHandler {
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            date = null;
+            saveContext= null;
+            date=null;
         }
     }
 

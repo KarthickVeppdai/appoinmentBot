@@ -1,7 +1,9 @@
 package com.ChatBot.ChatBot.send_util;
 
+import com.ChatBot.ChatBot.database.RedisService;
 import com.ChatBot.ChatBot.miniIO_util.PdfUploaderService;
 import com.ChatBot.ChatBot.models.MessageOutput;
+import com.ChatBot.ChatBot.models.UserContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
@@ -24,6 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -40,6 +43,13 @@ public class MessageSender {
     private CloseableHttpClient httpClient;
     @Autowired
     private ExternalHttpProperties externalHttpProperties;
+
+    @Autowired
+    public RedisService redisService;
+
+    private UserContext saveContext;
+
+    private Optional<UserContext> userContext;
 
     public JSONObject messageBody(MessageOutput messageOutput) {
         JSONObject outer = new JSONObject();
@@ -100,28 +110,31 @@ public class MessageSender {
 
 
     public String sendPostRequestText(MessageOutput messageOutput) {
-        HttpPost post = new HttpPost(externalHttpProperties.getBaseurl());
-        try {
-            for (Map.Entry<String, String> entry : externalHttpProperties.getHeaders().entrySet()) {
-                post.setHeader(entry.getKey(), entry.getValue());
-            }
-            if (messageOutput.getIs_template()) {
-                post.setEntity(new StringEntity(messageBodyTemplate(messageOutput).toString(), StandardCharsets.UTF_8));
-            } else {
-                post.setEntity(new StringEntity(messageBody(messageOutput).toString(), StandardCharsets.UTF_8));
-            }
-            CloseableHttpResponse response = httpClient.execute(post);
-            return String.valueOf(response.getCode());
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        } finally {
-            post = null;
-        }
+
+        return "";
     }
 
 
     @RabbitHandler
     public void listen(MessageOutput messageOutput) {
-        System.out.println("Sent Message::::" + messageOutput.getBody() + sendPostRequestText(messageOutput));
+
+        HttpPost post = new HttpPost(externalHttpProperties.getBaseurl());
+        for (Map.Entry<String, String> entry : externalHttpProperties.getHeaders().entrySet()) {
+            post.setHeader(entry.getKey(), entry.getValue());
+        }
+        if (messageOutput.getIs_template()) {
+            post.setEntity(new StringEntity(messageBodyTemplate(messageOutput).toString(), StandardCharsets.UTF_8));
+        } else {
+            post.setEntity(new StringEntity(messageBody(messageOutput).toString(), StandardCharsets.UTF_8));
+        }
+        try {
+            CloseableHttpResponse response = httpClient.execute(post);
+        } catch (Exception ex) {
+            userContext = Optional.ofNullable(redisService.getData(messageOutput.getSender_id()));
+            saveContext = userContext.get();
+            saveContext.setException_status(1);
+            redisService.saveData(messageOutput.getSender_id(), saveContext);
+            //log message not sent with respect to incoming message
+        }
     }
 }

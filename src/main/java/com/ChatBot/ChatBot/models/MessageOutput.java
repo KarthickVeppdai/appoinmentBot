@@ -21,7 +21,9 @@ public class MessageOutput implements Serializable {
     private String body;
     private String template_name;
     private Boolean is_template;
+    private Boolean is_template_have_slots;
     private List<String> template_slots;
+
 
     //sender_id,body,template_name,is_template,template_slots
 

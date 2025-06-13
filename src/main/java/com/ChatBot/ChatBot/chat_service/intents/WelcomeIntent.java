@@ -55,51 +55,113 @@ public class WelcomeIntent implements IntentHandler {
     @Override
     public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
 
+        // use text from text supplier or message.prperties or use form template. Here form template
+        try {
+            userContext.ifPresentOrElse(
+                    userContext1 -> {
 
-        userContext.ifPresentOrElse(userContext1 -> {
+                        // Write One if condition when user completes intent.
 
-                    // Write One if condition when user completes intent.
+                        switch (openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody())) {
+                            case APPOINMENT:
+                                saveContext = UserContext.builder()
+                                        .current_intent("APPOINMENT")
+                                        .current_intent_status(0)
+                                        .slots(List.of("DOCTOR", "DATE", "SLOT"))
+                                        .slots_status(List.of(0, 0, 0))
+                                        .slots_fullfilled(false)
+                                        .current_slot_id(0)
+                                        .processMessage(processMessage)
+                                        .build();
+                                redisService.saveData(processMessage.getFrom(), saveContext);
+                                StringBuilder sb = new StringBuilder(textSupplyService.getMessage("appointment") + "\n");
+                                for (String doctor : utilityConstants.docotorsList()) {
+                                    sb.append("➡\uFE0F").append(doctor).append("\n");
+                                }
+                                messageDispatcher.sendMessage(
+                                        MessageOutput.builder()
+                                                .sender_id(processMessage.getFrom())
+                                                .body(sb.toString())
+                                                .is_template(false)
+                                                .build());
+                                break;
 
-                    switch (openAI.getWelcomeIntent().isAnyManiIntent(processMessage.getBody())) {
-                        case APPOINMENT:
-                            saveContext = new UserContext("APPOINMENT", 0, List.of("DOCTOR", "DATE", "SLOT"), List.of(0, 0, 0), false, 0, processMessage);
-                            redisService.saveData(processMessage.getFrom(), saveContext);
-                            StringBuilder sb = new StringBuilder(textSupplyService.getMessage("appointment") + "\n");
-                            for (String doctor : utilityConstants.docotorsList()) {
-                                sb.append("➡\uFE0F").append(doctor).append("\n");
-                            }
-                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), sb.toString(), "", false, List.of("")));
-                            break;
+                            case REPORT:
+                                saveContext = UserContext.builder()
+                                        .current_intent("REPORT")
+                                        .current_intent_status(0)
+                                        .slots_fullfilled(false)
+                                        .current_slot_id(0)
+                                        .processMessage(processMessage)
+                                        .build();
+                                redisService.saveData(processMessage.getFrom(), saveContext);
+                                messageDispatcher.sendMessage(
+                                        MessageOutput.builder()
+                                                .sender_id(processMessage.getFrom())
+                                                .is_template(false)
+                                                .body(textSupplyService.getMessage("report"))
+                                                .build());
+                                break;
 
-                        case REPORT:
-                            saveContext = new UserContext("REPORT", 0, List.of("ID"), List.of(0), false, 0, processMessage);
-                            redisService.saveData(processMessage.getFrom(), saveContext);
-                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("report"), "", false, List.of("")));
-                            break;
+                            case INFO:
+                                saveContext = UserContext.builder()
+                                        .current_intent("INFO")
+                                        .current_intent_status(0)
+                                        .slots_fullfilled(false)
+                                        .current_slot_id(0)
+                                        .processMessage(processMessage)
+                                        .build();
+                                redisService.saveData(processMessage.getFrom(), saveContext);
+                                messageDispatcher.sendMessage(
+                                        MessageOutput.builder()
+                                                .sender_id(processMessage.getFrom())
+                                                .is_template(false)
+                                                .body(textSupplyService.getMessage("info"))
+                                                .build());
+                                break;
 
-                        case INFO:
-                            saveContext = new UserContext("INFO", 0, List.of(""), List.of(0), false, 0, processMessage);
-                            redisService.saveData(processMessage.getFrom(), saveContext);
-                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("info"), "", false, List.of("")));
-                            break;
-
-
-                        default:
-                            saveContext = new UserContext("WELCOME", 0, List.of(""), List.of(0), false, 0, processMessage);
-                            redisService.saveData(processMessage.getFrom(), saveContext);
-                         //   messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("welocmerepete"), "", false, List.of("")));
-                            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "welocme_repete", true, List.of("")));
-                            break;
+                            default:
+                                saveContext = UserContext.builder()
+                                        .current_intent("WELCOME")
+                                        .current_intent_status(0)
+                                        .slots_fullfilled(false)
+                                        .current_slot_id(0)
+                                        .processMessage(processMessage)
+                                        .build();
+                                redisService.saveData(processMessage.getFrom(), saveContext);
+                                messageDispatcher.sendMessage(
+                                        MessageOutput.builder()
+                                                .sender_id(processMessage.getFrom())
+                                                .is_template(true)
+                                                .template_name("welocme_repete")
+                                                .build());
+                                break;
+                        }
+                    }, () -> {
+                        // Called when fresh
+                        saveContext = UserContext.builder()
+                                .current_intent("WELCOME")
+                                .current_intent_status(0)
+                                .slots_fullfilled(false)
+                                .current_slot_id(0)
+                                .processMessage(processMessage)
+                                .build();
+                        redisService.saveData(processMessage.getFrom(), saveContext);
+                        messageDispatcher.sendMessage(
+                                MessageOutput.builder()
+                                        .sender_id(processMessage.getFrom())
+                                        .is_template(true)
+                                        .template_name("welcome_intent")
+                                        .build());
                     }
+            );
+            return null;
 
-                }, () -> {
-                    // Called when fresh or user canceled/exit intent
-
-                    saveContext = new UserContext("WELCOME", 0, List.of(""), List.of(0), false, 0, processMessage);
-                    redisService.saveData(processMessage.getFrom(), saveContext);
-                    messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "welcome_intent", true, List.of("")));
-                }
-        );
+        } catch (Exception e) {
+            System.out.println(e);
+        } finally {
+            saveContext = null;
+        }
         return null;
     }
 }

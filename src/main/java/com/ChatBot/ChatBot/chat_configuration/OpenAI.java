@@ -1,9 +1,6 @@
 package com.ChatBot.ChatBot.chat_configuration;
 
-import com.ChatBot.ChatBot.chat_service.ai_service.AppoinmentAIService;
-import com.ChatBot.ChatBot.chat_service.ai_service.CancelIntentAIService;
-import com.ChatBot.ChatBot.chat_service.ai_service.ReportIntentAIService;
-import com.ChatBot.ChatBot.chat_service.ai_service.WelcomeIntentAIService;
+import com.ChatBot.ChatBot.chat_service.ai_service.*;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
@@ -44,5 +41,10 @@ public class OpenAI {
     @Bean
     public ReportIntentAIService getReportIntent() {
         return AiServices.create(ReportIntentAIService.class, getModel());
+    }
+
+    @Bean
+    public HelpIntentAIService getHelpIntent() {
+        return AiServices.create(HelpIntentAIService.class, getModel());
     }
 }

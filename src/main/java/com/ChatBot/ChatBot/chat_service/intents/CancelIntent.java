@@ -33,12 +33,20 @@ public class CancelIntent implements IntentHandler {
     @Override
     public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
 
+        saveContext = UserContext.builder()
+                .current_intent("WELCOME")
+                .current_intent_status(0)
+                .last_intent(userContext.get().getCurrent_intent())
+                .processMessage(processMessage)
+                .build();
+        redisService.saveData(processMessage.getFrom(), saveContext);
 
-        redisService.deleteData(processMessage.getFrom());
-        messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("cancle.intent.empty"), "", false, List.of("")));
-        intentRegistry.assignIntent("WELCOME").IntentProcessor(Optional.empty(), processMessage);
-
-
+        messageDispatcher.sendMessage(
+                MessageOutput.builder()
+                        .sender_id(processMessage.getFrom())
+                        .is_template(true)
+                        .template_name("cancel_intent")
+                        .build());
         return null;
     }
 }

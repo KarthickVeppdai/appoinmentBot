@@ -14,6 +14,7 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -61,24 +62,43 @@ public class MessageSenderMedia {
     }
 
 
-    public String sendPostRequestMedia(MessageOutput messageOutput) throws Exception {
-        String media_id = null;
-        media_id = uploadPdfToWhatsApp(messageOutput);
-        HttpPost post = new HttpPost(externalHttpProperties.getBaseurl());
-        try {
-            for (Map.Entry<String, String> entry : externalHttpProperties.getHeaders().entrySet()) {
-                post.setHeader(entry.getKey(), entry.getValue());
-            }
-            post.setEntity(new StringEntity(messageDocument(messageOutput, media_id).toString(), StandardCharsets.UTF_8));
-            CloseableHttpResponse response = httpClient.execute(post);
-            return String.valueOf(response.getCode());
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        } finally {
-            post = null;
-            media_id = null;
-        }
+    public JSONObject messageDocumentTempalteReport(MessageOutput messageOutput, String media_id) {
+
+
+        JSONObject document = new JSONObject()
+                .put("id", media_id)
+                .put("filename", messageOutput.getBody());
+
+        JSONObject headerParameter = new JSONObject()
+                .put("type", "document")
+                .put("document", document);
+
+        JSONArray headerParameters = new JSONArray()
+                .put(headerParameter);
+
+        JSONObject headerComponent = new JSONObject()
+                .put("type", "header")
+                .put("parameters", headerParameters);
+
+        JSONArray components = new JSONArray()
+                .put(headerComponent);
+
+        JSONObject language = new JSONObject()
+                .put("code", "en_IN");
+
+        JSONObject template = new JSONObject()
+                .put("name", "report_intent")
+                .put("language", language)
+                .put("components", components);
+
+        JSONObject message = new JSONObject()
+                .put("messaging_product", "whatsapp")
+                .put("to", messageOutput.getSender_id())
+                .put("type", "template")
+                .put("template", template);
+        return message;
     }
+
 
     public String uploadPdfToWhatsApp(MessageOutput messageOutput) throws Exception {
 
@@ -95,8 +115,6 @@ public class MessageSenderMedia {
 
         post.setHeader("Authorization", values.get(0));
         post.setEntity(builder.build());
-
-
         CloseableHttpClient client = HttpClients.createDefault();
         CloseableHttpResponse response = client.execute(post);
         String json = null;
@@ -105,7 +123,6 @@ public class MessageSenderMedia {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         } finally {
-
         }
         JsonNode root = new ObjectMapper().readTree(json);
         return root.get("id").asText(); // media_id
@@ -115,18 +132,26 @@ public class MessageSenderMedia {
     @RabbitHandler
     public void listen(MessageOutput messageOutput) {
         try {
-            if (pdfUploaderService.checkIfObjectExists("whatsapp-media",messageOutput.getBody())) {
-                System.out.println("Processing Media Message::::" + messageOutput.getSender_id() + sendPostRequestMedia(messageOutput));
-                messageDispatcher.sendMessage(new MessageOutput(messageOutput.getSender_id(), textSupplyService.getMessage("greeting"), "welcome_intent", true, List.of("")));
-            } else {
-
-                messageDispatcher.sendMessage(new MessageOutput(messageOutput.getSender_id(), "No Report found for Your number"+"\n"+textSupplyService.getMessage("greeting"), "welcome_intent", false, List.of("")));
+            String media_id = null;
+            media_id = uploadPdfToWhatsApp(messageOutput);
+            HttpPost post = new HttpPost(externalHttpProperties.getBaseurl());
+            try {
+                for (Map.Entry<String, String> entry : externalHttpProperties.getHeaders().entrySet()) {
+                    post.setHeader(entry.getKey(), entry.getValue());
+                }
+                post.setEntity(new StringEntity(messageDocumentTempalteReport(messageOutput, media_id).toString(), StandardCharsets.UTF_8));
+                CloseableHttpResponse response = httpClient.execute(post);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            } finally {
+                post = null;
+                media_id = null;
             }
-
         } catch (Exception e) {
             System.out.println(e);
         } finally {
             System.out.println("Media sent failed");
         }
+
     }
 }

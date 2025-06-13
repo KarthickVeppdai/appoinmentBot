@@ -3,6 +3,7 @@ package com.ChatBot.ChatBot.chat_service.intents;
 import com.ChatBot.ChatBot.chat_configuration.OpenAI;
 import com.ChatBot.ChatBot.chat_service.mangers.IntentHandler;
 import com.ChatBot.ChatBot.database.RedisService;
+import com.ChatBot.ChatBot.miniIO_util.PdfUploaderService;
 import com.ChatBot.ChatBot.models.MessageOutput;
 import com.ChatBot.ChatBot.models.ProcessMessage;
 import com.ChatBot.ChatBot.models.UserContext;
@@ -32,39 +33,38 @@ public class ReportIntent implements IntentHandler {
     @Autowired
     public TextSupplyService textSupplyService;
 
+    @Autowired
+    private PdfUploaderService pdfUploaderService;
+
     @Override
     public Void IntentProcessor(Optional<UserContext> userContext, ProcessMessage processMessage) {
 
+        saveContext = UserContext.builder()
+                .current_intent("WELCOME")
+                .current_intent_status(0)
+                .slots_fullfilled(false)
+                .last_intent("REPORT")
+                .processMessage(processMessage)
+                .build();
 
-        if (!userContext.get().getSlots_fullfilled()) {
+        redisService.saveData(processMessage.getFrom(), saveContext);
 
-            if (true)// check for vaild ID or phone no
-            {
-                // send pdf or send no pdf found
-                saveContext = new UserContext("WELCOME", 0,
-                        List.of(""), List.of(0), false, 0, processMessage);
-
-                redisService.saveData(processMessage.getFrom(), saveContext);
-                //send PDF/Document to user
-                messageDispatcher.sendMessageMedia(new MessageOutput(processMessage.getFrom(), "Your Report. Please dowload ", "", false, List.of("")));
-               // messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
-            } else {
-                saveContext = new UserContext("REPORT", 1,
-                        List.of("ID"), List.of(0), false, 0, processMessage);
-                System.out.println("Request for Report ID");
-                redisService.saveData(processMessage.getFrom(), saveContext);
-                messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("report.repeat"), "", false, List.of("")));
-            }
+        if (pdfUploaderService.checkIfObjectExists("whatsapp-media", processMessage.getFrom())) {
+            //send PDF/Document to user
+            messageDispatcher.sendMessageMedia(
+                    MessageOutput.builder()
+                            .sender_id(processMessage.getFrom())
+                            .is_template(true)
+                            .template_name("report_intent")
+                            .build());
         } else {
-
-
-            saveContext = new UserContext("WELCOME", 0,
-                    List.of(""), List.of(0), false, 0, processMessage);
-            System.out.println("Booking Confirmed-----Going to Welcome");
-            redisService.saveData(processMessage.getFrom(), saveContext);
-            messageDispatcher.sendMessage(new MessageOutput(processMessage.getFrom(), textSupplyService.getMessage("greeting"), "", false, List.of("")));
+            messageDispatcher.sendMessage(
+                    MessageOutput.builder()
+                            .sender_id(processMessage.getFrom())
+                            .is_template(true)
+                            .template_name("report_not_available")
+                            .build());
         }
-
         return null;
     }
 }

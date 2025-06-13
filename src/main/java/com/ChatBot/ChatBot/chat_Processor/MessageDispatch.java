@@ -43,24 +43,26 @@ public class MessageDispatch {
     public void processTextMessage(ProcessMessageEvent event) {
         try {
             ProcessMessage processMessage = (ProcessMessage) event.getSource();
+            userContext = Optional.ofNullable(redisService.getData(processMessage.getFrom()));
+
+            if (userContext.filter(ctx -> ctx.getException_status() == 1).isPresent()) {
+                // This is for exception status .Do Nothing
+                // Optionally send mail or SMS
+                return;
+            }
             if (openAI.getCancelIntent().isPositive(processMessage.getBody())) {// go to cancel intent  openAI.getCancelIntent().isPositive(processMessage.getBody())
                 intentRegistry.assignIntent("CANCEL").IntentProcessor(Optional.empty(), processMessage);
+            } else if (openAI.getHelpIntent().isPositive(processMessage.getBody())) {
+                intentRegistry.assignIntent("HELP").IntentProcessor(Optional.empty(), processMessage);
             } else {
-                userContext = Optional.ofNullable(redisService.getData(processMessage.getFrom()));
-                userContext
-                        .ifPresentOrElse(
-                                userContext1 -> {
-                                    if (userContext1.getCurrent_intent_status() == 1) {
-                                        //Completed Pass to welcome Intent and in welocme intent process as old
-                                        intentRegistry.assignIntent("WELCOME").IntentProcessor(userContext, processMessage);
-                                    } else {
-                                        intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext, processMessage);
-                                    }
-                                },
-                                () -> {
-                                    intentRegistry.assignIntent("WELCOME").IntentProcessor(Optional.empty(), processMessage);
-                                }
-                        );
+                userContext.ifPresentOrElse(
+                        userContext1 -> {
+                            intentRegistry.assignIntent(userContext.get().getCurrent_intent()).IntentProcessor(userContext, processMessage);
+                        },
+                        () -> {
+                            intentRegistry.assignIntent("WELCOME").IntentProcessor(Optional.empty(), processMessage);
+                        }
+                );
             }
         } catch (Exception e) {
             System.out.println(e);

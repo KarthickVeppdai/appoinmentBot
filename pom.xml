@@ -53,11 +53,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+
 
 		<dependency>
 			<groupId>org.apache.httpcomponents.client5</groupId>
@@ -102,6 +98,22 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
 			<version>4.3</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>5.11.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Mockito for unit testing -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>5.12.0</version>
+			<scope>test</scope>
 		</dependency>
 
 
@@ -173,17 +185,13 @@
 			<version>2.9.1</version> <!-- Or latest -->
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.tika</groupId>
-			<artifactId>tika-parsers</artifactId>
-			<version>2.9.1</version> <!-- Or latest -->
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.apache.tika</groupId>-->
+<!--			<artifactId>tika-parsers</artifactId>-->
+<!--			<version>2.9.1</version> &lt;!&ndash; Or latest &ndash;&gt;-->
+<!--		</dependency>-->
 
-		<dependency>
-			<groupId>org.apache.tika</groupId>
-			<artifactId>tika-parser-ocr</artifactId>
-			<version>2.9.1</version> <!-- Or latest -->
-		</dependency>
+
 
 
 	</dependencies>
